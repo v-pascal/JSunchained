@@ -24,18 +24,21 @@ Permission::Permission(char** response) : Reply(response) {
 Permission::~Permission() {
 
     LOGV(UNCHAINED_LOG_PERMISSION, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#ifndef UNCHAINED_COMPONENT
     for (std::vector<std::string*>::iterator iter = mPermURL.begin(); iter != mPermURL.end(); ++iter)
         delete (*iter);
     mPermURL.clear();
-    
-#if !defined(UNCHAINED_COMPONENT) && !defined(__ANDROID__)
+
+#ifndef __ANDROID__
     if (mAlertDlg != nil)
         [mAlertDlg release];
+#endif
 #endif
 }
 
 bool Permission::allowPermission() {
 
+#ifndef UNCHAINED_COMPONENT
 #ifdef __ANDROID__
     LOGV(UNCHAINED_LOG_PERMISSION, 0, LOG_FORMAT(" - (u:%s; j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__,
             mURL.substr(sizeof(HTTP_REPLY_HEAD) - 1).c_str(), g_jVM, g_jResClass, g_jResObj);
@@ -67,6 +70,7 @@ bool Permission::allowPermission() {
                                andPermissions:mPermission];
         [mAlertDlg show];
     }];
+#endif
 #endif
     return true;
 }
@@ -104,7 +108,7 @@ bool Permission::reply(const void* data) {
     mLength = static_cast<int>(strlen(*mResponse));
 
 #else
-    sprintf(*mResponse, PERM_JSON, 1, mPermission);
+    sprintf(*mResponse, PERM_JSON, 1, PERMISSION_MASK_ALL);
     mLength = static_cast<int>(strlen(*mResponse));
 
 #endif

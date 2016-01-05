@@ -8,14 +8,17 @@
 #include "Reply.h"
 #import "NSResources.h"
 
-#ifndef UNCHAINED_COMPONENT
+#endif
+#include <vector>
+
 #define PERMISSION_MASK_CAMERA          0x00000001
 
+#define PERMISSION_MASK_ALL             PERMISSION_MASK_CAMERA
+
+#ifndef UNCHAINED_COMPONENT
 #define PERMISSION_ACCES_ALLOWED        1
 #define PERMISSION_ACCES_NOT_ALLOWED    2
 #endif
-#endif
-#include <vector>
 
 #define HTTP_REPLY_HEAD                 "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: "
 
