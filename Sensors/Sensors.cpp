@@ -20,6 +20,10 @@ Sensors::Sensors(char** response) : Reply(response) {
 
     LOGV(UNCHAINED_LOG_SENSORS, 0, LOG_FORMAT(" - r:%p"), __PRETTY_FUNCTION__, __LINE__, response);
     memset(&mAccel, 0, sizeof(Coordinates));
+
+#ifndef __ANDROID__
+    mMotion = [[NSMotion alloc] init];
+#endif
 }
 Sensors::~Sensors() { LOGV(UNCHAINED_LOG_SENSORS, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__); }
 

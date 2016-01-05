@@ -146,6 +146,7 @@ unsigned char Core::start(const std::string &url, const std::string &version) {
     mThread = new boost::thread(startCoreThread, this);
     return ERR_ID_NONE;
 }
+#ifdef __ANDROID__
 void Core::pause(bool finishing, bool lockScreen) {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(" - f:%s; l:%s"), __PRETTY_FUNCTION__, __LINE__, (finishing)? "true":"false",
@@ -153,9 +154,26 @@ void Core::pause(bool finishing, bool lockScreen) {
     if (!finishing)
         Camera::getInstance()->pause(lockScreen);
 }
+#else
+void Core::resume() {
+
+    LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+    [mSensors.mMotion resume];
+    Camera::getInstance()->resume();
+}
+void Core::pause() {
+
+    LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+    [mSensors.mMotion pause];
+    Camera::getInstance()->pause();
+}
+#endif
 void Core::stop() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#ifndef __ANDROID__
+    [mSensors.mMotion stop];
+#endif
     mClose = true;
 }
 
@@ -273,8 +291,8 @@ void Core::coreThreadRunning() {
                             quit = true;
                             break;
                         }
-                        Reply* replyObj;
-                        const char* httpBody;
+                        Reply* replyObj = NULL;
+                        const char* httpBody = NULL;
 
 
 
@@ -313,8 +331,8 @@ void Core::coreThreadRunning() {
                             replyObj = &mSensors;
                             httpBody = HTTP_REPLY_JSON;
 
-                            std::string connCount(&mConnexions[i]->Buffer[sizeof(HTTP_GET) + 1]);
-                            mConnCount = strToNum<short>(connCount);
+                            //std::string connCount(&mConnexions[i]->Buffer[sizeof(HTTP_GET) + 1]);
+                            //mConnCount = strToNum<short>(connCount);
                         }
                         else if (mConnexions[i]->Buffer[sizeof(HTTP_GET) - 1] == 'p') { // /permission/*_0 || 1
 
@@ -378,17 +396,6 @@ void Core::coreThreadRunning() {
                             replyRes = mVideo.reply(&operation);
                             replyObj = &mVideo;
                         }
-
-
-
-
-
-
-
-
-
-
-
 
                         // Send reply
                         if (replyRes) {

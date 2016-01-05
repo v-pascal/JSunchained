@@ -2,17 +2,27 @@
 #define UNCHAINED_CAMERA_H_
 
 #include <boost/thread.hpp>
+#ifdef __ANDROID__
 #include <gst/app/gstappsink.h>
+#else
+#import "NSResources.h"
+#endif
 
 #define CAM_WIDTH           640
 #define CAM_HEIGHT          480
 #define MAX_JPEG_SIZE       (CAM_WIDTH * CAM_HEIGHT * 3)
 
 
+class Core;
+
 //////
 class Camera {
 
+#ifdef __ANDROID__
     friend void eos(GstAppSink* sink, gpointer data);
+#else
+    friend class Core;
+#endif
 
 private:
     Camera();
@@ -25,6 +35,7 @@ private:
 
     bool mStarted;
 #ifndef __ANDROID__
+    NSCamera* mCamera;
     bool mPaused; // iOS only coz on Android the stop camera is managed B4 'pause' method call
 #endif
 #ifdef DEBUG
@@ -34,7 +45,9 @@ private:
     short mHeight;
     unsigned int mBufferLen;
 
+#ifdef __ANDROID__
     void updateFrame(GstBuffer* jpeg);
+#endif
 
 public:
     static Camera* getInstance() {

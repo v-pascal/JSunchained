@@ -4,9 +4,13 @@
 #include <jni.h>
 #include <Unchained/Log/Log.h>
 #include <Unchained/Core/Core.h>
+
 #else
 #include "Log.h"
 #include "Core.h"
+
+#import <libGST/libGST.h>
+
 #endif
 
 
@@ -19,7 +23,7 @@ jobject g_jResObj = NULL;
 
 Core* unchainedCore = NULL;
 
-//////
+////// Core
 void unchainedInit(const PlatformData* data) {
 
     LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
@@ -28,7 +32,10 @@ void unchainedInit(const PlatformData* data) {
     g_jResClass = data->cls;
     g_jResObj = data->res;
 
+#else
+    lib_gst_init();
 #endif
+    unchainedCore = Core::getInstance();
 }
 const char* unchainedKey() { return unchainedCore->key(); }
 bool unchainedReady() { return unchainedCore->isReady(); }
@@ -39,24 +46,30 @@ unsigned char unchainedReset(const std::string &url) {
     return unchainedCore->reset(url);
 }
 
+////// Activity
 unsigned char unchainedStart(const std::string &url, const std::string &version) {
 
     LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str(), version.c_str());
-    unchainedCore = Core::getInstance();
     return unchainedCore->start(url, version);
 }
+#ifdef __ANDROID__
 void unchainedPause(bool finishing, bool lockScreen) { unchainedCore->pause(finishing, lockScreen); }
-void unchainedStop() {
-
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-    unchainedCore->stop();
-}
 void unchainedDestroy() {
 
     LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
     Core::freeInstance();
 }
+#else
+void unchainedResume() { unchainedCore->resume(); }
+void unchainedPause() { unchainedCore->pause(); }
+#endif
+void unchainedStop() {
 
+    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+    unchainedCore->stop();
+}
+
+////// Resources
 void unchainedAccel(float x, float y, float z) {
 
     //LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - x:%f; y:%f; z:%f"), __PRETTY_FUNCTION__, __LINE__, x, y, z);

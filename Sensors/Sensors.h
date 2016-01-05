@@ -3,8 +3,11 @@
 
 #ifdef __ANDROID__
 #include <Unchained/Core/Reply.h>
+
 #else
+#import "NSResources.h"
 #include "Reply.h"
+
 #endif
 
 
@@ -27,6 +30,10 @@ public:
     enum {
         TYPE_ACCEL = 0
     };
+    
+#ifndef __ANDROID__
+    NSMotion* mMotion;
+#endif
 
     //
     inline void accel(float x, float y, float z) {

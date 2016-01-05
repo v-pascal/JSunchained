@@ -95,19 +95,24 @@ public:
 #ifndef UNCHAINED_COMPONENT
         mPermission.setAllowed(allowed);
 #else
-        assert(NULL);
         LOGF(LOG_FORMAT(" - No permission need for component"), __PRETTY_FUNCTION__, __LINE__);
+        assert(NULL);
 #endif
     }
     unsigned char reset(const std::string &url);
 
+    ////// Activity
     unsigned char start(const std::string &url, const std::string &version);
+#ifdef __ANDROID__
     void pause(bool finishing, bool lockScreen);
+#else
+    void resume();
+    void pause();
+#endif
     void stop();
-    // Activity
 
+    ////// Resources
     inline void accel(float x, float y, float z) { mSensors.accel(x, y, z); }
-    // Sensors
 
 };
 

@@ -3,18 +3,22 @@
 
 #ifdef __ANDROID__
 #include <Unchained/Core/Reply.h>
+
 #else
 #include "Reply.h"
+#import "NSResources.h"
+
+#ifndef UNCHAINED_COMPONENT
+#define PERMISSION_MASK_CAMERA          0x00000001
+
+#define PERMISSION_ACCES_ALLOWED        1
+#define PERMISSION_ACCES_NOT_ALLOWED    2
+#endif
 #endif
 #include <vector>
 
-#define HTTP_REPLY_HEAD             "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: "
+#define HTTP_REPLY_HEAD                 "HTTP/1.1 200 OK\nAccess-Control-Allow-Origin: "
 
-#ifdef UNCHAINED_COMPONENT
-#define PERMISSION_MASK_CAMERA      0x00000001
-
-#define PERMISSION_MASK_ALL         PERMISSION_MASK_CAMERA
-#endif
 
 //////
 class Permission : public Reply {
@@ -38,6 +42,10 @@ private:
 
     volatile unsigned char mAllowed;
     bool mWaiting;
+
+#ifndef __ANDROID__
+    NSAlert* mAlertDlg;
+#endif
 #endif
     bool allowPermission();
 

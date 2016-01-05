@@ -29,17 +29,17 @@ typedef enum {
 
 #ifdef DEBUG
 #define LOGU(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_UNKNOWN, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_UNKNOWN, "JSunchained", format, __VA_ARGS__); }
 #define LOGD(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_DEFAULT, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_DEFAULT, "JSunchained", format, __VA_ARGS__); }
 #define LOGV(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_VERBOSE, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_VERBOSE, "JSunchained", format, __VA_ARGS__); }
 #define LOGDE(level, mod, format, ...)      if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_DEBUG, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_DEBUG, "JSunchained", format, __VA_ARGS__); }
 #define LOGI(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_INFO, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_INFO, "JSunchained", format, __VA_ARGS__); }
 #define LOGS(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_SILENT, "Unchained", format, __VA_ARGS__); }
+                                             { __android_log_print(ANDROID_LOG_SILENT, "JSunchained", format, __VA_ARGS__); }
 
 #else
 #define LOGU(level, mod, format, ...)       ((void)0)
@@ -50,9 +50,9 @@ typedef enum {
 #define LOGS(level, mod, format, ...)       ((void)0)
 
 #endif
-#define LOGW(format, ...)                   __android_log_print(ANDROID_LOG_WARN, "Unchained", format, __VA_ARGS__);
-#define LOGE(format, ...)                   __android_log_print(ANDROID_LOG_ERROR, "Unchained", format, __VA_ARGS__);
-#define LOGF(format, ...)                   __android_log_print(ANDROID_LOG_FATAL, "Unchained", format, __VA_ARGS__);
+#define LOGW(format, ...)                   __android_log_print(ANDROID_LOG_WARN, "JSunchained", format, __VA_ARGS__);
+#define LOGE(format, ...)                   __android_log_print(ANDROID_LOG_ERROR, "JSunchained", format, __VA_ARGS__);
+#define LOGF(format, ...)                   __android_log_print(ANDROID_LOG_FATAL, "JSunchained", format, __VA_ARGS__);
 
 #else // !__ANDROID__
 

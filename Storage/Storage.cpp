@@ -92,8 +92,7 @@ std::string Storage::getFolder(unsigned char type) {
 #ifdef DEBUG
     else {
 
-        LOGE(LOG_FORMAT(" - Failed to get '%s' folder"), __PRETTY_FUNCTION__, __LINE__, (type == FOLDER_TYPE_PICTURES)?
-             "Pictures":"Movies");
+        LOGE(LOG_FORMAT(" - Failed to get '%d' folder"), __PRETTY_FUNCTION__, __LINE__, type);
         assert(NULL);
     }
 #endif
@@ -104,6 +103,7 @@ std::string Storage::getFolder(unsigned char type) {
 void Storage::init() {
 
     LOGV(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#ifdef __ANDROID__
     using namespace boost::filesystem;
     path picDir(getFolder(FOLDER_TYPE_PICTURES));
     directory_iterator end;
@@ -111,6 +111,10 @@ void Storage::init() {
         if ((is_regular_file(dir->status())) && ((!dir->path().extension().compare(".jpg")) ||
                 (!dir->path().extension().compare(".JPG"))))
             mPictures.push_back(new std::string(dir->path().generic_string()));
+#else
+    NSLog(@"WARNING: Storage not managed yet!");
+    assert(NULL);
+#endif
 }
 
 bool Storage::defaultReply() {

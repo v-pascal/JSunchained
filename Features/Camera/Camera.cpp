@@ -14,6 +14,7 @@
 #include "Storage.h"
 
 #include <libGST/libGST.h>
+#include <libGST/defLibGST.h>
 
 #endif
 #include <assert.h>
@@ -23,8 +24,9 @@
 #ifdef __ANDROID__
 #define BUFFER_SIZE_NV21        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 1.5f)
 #else
-#define BUFFER_SIZE_BGRA        (CAM_WIDTH * CAM_HEIGHT * 4)
+#define BUFFER_SIZE_ABGR        (CAM_WIDTH * CAM_HEIGHT * 4)
 #endif
+
 
 Camera* Camera::mThis = NULL;
 
@@ -37,6 +39,9 @@ Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBu
 #endif
 
 #ifndef __ANDROID__
+    mCamera = [[NSCamera alloc] init];
+    mCamera.camReady = [mCamera initCamera];
+
     mPaused = false;
 #endif
 }
@@ -46,6 +51,8 @@ Camera::~Camera() {
     //if (mStarted) stop(); // Crash when close
     if (mCamBuffer)
         delete [] mCamBuffer;
+
+    [mCamera release];
 }
 
 bool Camera::start(short width, short height) {
@@ -74,15 +81,15 @@ bool Camera::start(short width, short height) {
 
     if (!env->CallBooleanMethod(g_jResObj, mthd, width, height)) {
 #else
-    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (a:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
-         g_AppleOS, (mStarted)? "true":"false");
-    assert(g_AppleOS);
+    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
+         mCamera, (mStarted)? "true":"false");
+    assert(mCamera);
     assert(!mStarted);
 
     mWidth = width;
     mHeight = height;
 
-    if (![g_AppleOS startCamera:width andHeight:height]) {
+    if (![mCamera startCamera:width andHeight:height]) {
 #endif
         LOGE(LOG_FORMAT(" - Failed to start camera with format %dx%d"), __PRETTY_FUNCTION__, __LINE__, width, height);
         //assert(NULL); // Can occured when Create/Stop operation is done quickly
@@ -161,12 +168,12 @@ bool Camera::stop() {
     }
     if (!env->CallBooleanMethod(g_jResObj, mthd)) {
 #else
-    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (a:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, g_AppleOS,
+    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, mCamera,
             (mStarted)? "true":"false");
-    assert(g_AppleOS);
+    assert(mCamera);
     assert(mStarted);
 
-    if (![g_AppleOS stopCamera]) {
+    if (![mCamera stopCamera]) {
 #endif
         // Fail & display error only when not in pause operation coz at least it is impossible to know
         // if the camera has already been started or not
@@ -178,6 +185,7 @@ bool Camera::stop() {
     return true;
 }
 
+#ifdef __ANDROID__
 void Camera::updateFrame(GstBuffer* jpeg) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - j:%p"), __PRETTY_FUNCTION__, __LINE__, jpeg);
@@ -190,7 +198,7 @@ void Camera::updateFrame(GstBuffer* jpeg) {
     mBufferLen = gst_buffer_extract(jpeg, 0, mCamBuffer, gst_buffer_get_size(jpeg));
     mMutex.unlock();
 }
-
+    
 typedef struct {
 
     Camera* obj;
@@ -211,10 +219,6 @@ void Camera::updateBuffer(const unsigned char* data) {
             mWidth, mHeight);
     //assert(mStarted); // This method can be called before this flag has been set
 #endif
-#ifndef __ANDROID__
-    if (mPaused)
-        return;
-#endif
     GstElement *pipeline, *appsrc, *conv, *jpegenc, *appsink;
     GMainLoop* loop = g_main_loop_new(NULL, false);
 
@@ -232,11 +236,7 @@ void Camera::updateBuffer(const unsigned char* data) {
 
     g_object_set(G_OBJECT(appsrc), "caps",
             gst_caps_new_simple("video/x-raw",
-#ifdef __ANDROID__
                  "format", G_TYPE_STRING, "NV21",
-#else
-                 "format", G_TYPE_STRING, "BGRA",
-#endif
                  "width", G_TYPE_INT, CAM_WIDTH,
                  "height", G_TYPE_INT, CAM_HEIGHT,
                  "framerate", GST_TYPE_FRACTION, 1, 1,
@@ -246,11 +246,7 @@ void Camera::updateBuffer(const unsigned char* data) {
     gst_element_link_many(appsrc, conv, jpegenc, appsink, NULL);
 
     GstBuffer* raw = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY, const_cast<unsigned char*>(data),
-#ifdef __ANDROID__
             BUFFER_SIZE_NV21, 0, BUFFER_SIZE_NV21, const_cast<unsigned char*>(data), NULL);
-#else
-            BUFFER_SIZE_BGRA, 0, BUFFER_SIZE_BGRA, const_cast<unsigned char*>(data), NULL);
-#endif
     gst_app_src_push_buffer(GST_APP_SRC(appsrc), raw);
     gst_app_src_end_of_stream(GST_APP_SRC(appsrc));
 
@@ -265,3 +261,33 @@ void Camera::updateBuffer(const unsigned char* data) {
     gst_object_unref(GST_OBJECT(pipeline));
     g_main_loop_unref(loop);
 }
+
+#else
+void Camera::updateBuffer(const unsigned char* data) {
+
+#ifdef DEBUG
+    ++mLog;
+    LOGV(UNCHAINED_LOG_CAMERA, (mLog % 100), LOG_FORMAT(" - d:%p (w:%d; h:%d)"), __PRETTY_FUNCTION__, __LINE__, data,
+         mWidth, mHeight);
+    //assert(mStarted); // This method can be called before this flag has been set
+#endif
+    if (mPaused)
+        return;
+
+    LIBGST_CONVERT_INFO info;
+    info.abgr = const_cast<unsigned char*>(data);
+    info.dest = &mCamBuffer;
+    info.len = &mBufferLen;
+    info.mutex = &mMutex;
+    info.max = BUFFER_SIZE_ABGR;
+    info.width = CAM_WIDTH;
+    info.height = CAM_HEIGHT;
+
+    if (!lib_gst_convert(&info)) {
+
+        LOGE(LOG_FORMAT(" - GStreamer error"), __PRETTY_FUNCTION__, __LINE__);
+        assert(NULL);
+    }
+}
+
+#endif
