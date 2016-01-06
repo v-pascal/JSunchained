@@ -63,7 +63,7 @@ extern jobject g_jResObj;
 #endif
 
 ////// Log levels (< 5 to log)
-#define UNCHAINED_LOG_MAIN          5
+#define UNCHAINED_LOG_MAIN          4
 #define UNCHAINED_LOG_CORE          5
 #define UNCHAINED_LOG_INTERNET      5
 #define UNCHAINED_LOG_REPLY         5
