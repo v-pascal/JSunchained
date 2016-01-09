@@ -113,7 +113,7 @@ void Storage::init() {
             mPictures.push_back(new std::string(dir->path().generic_string()));
 #else
     NSLog(@"WARNING: Storage not managed yet!");
-    assert(NULL);
+    //assert(NULL);
 #endif
 }
 
