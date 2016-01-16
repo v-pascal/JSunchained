@@ -1,11 +1,13 @@
-#include "Unchained.h"
+﻿#include "Unchained.h"
 
+#if defined(__ANDROID__) || defined(_WINDLL)
 #ifdef __ANDROID__
 #include <jni.h>
+#endif
 #include <Unchained/Log/Log.h>
 #include <Unchained/Core/Core.h>
 
-#else
+#else // iOS
 #include "Log.h"
 #include "Core.h"
 
@@ -24,55 +26,57 @@ jobject g_jResObj = NULL;
 Core* unchainedCore = NULL;
 
 ////// Core
-void unchainedInit(const PlatformData* data) {
+UNCHAINED_API void unchainedInit(const PlatformData* data) {
 
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
+	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
 #ifdef __ANDROID__
-    g_jVM = data->jvm;
-    g_jResClass = data->cls;
-    g_jResObj = data->res;
+	g_jVM = data->jvm;
+	g_jResClass = data->cls;
+	g_jResObj = data->res;
+
+#elif defined(_WINDLL)
 
 #else
-    lib_gst_init();
+	lib_gst_init();
 #endif
-    unchainedCore = Core::getInstance();
+	unchainedCore = Core::getInstance();
 }
-const char* unchainedKey() { return unchainedCore->key(); }
-bool unchainedReady() { return unchainedCore->isReady(); }
-void unchainedPermission(short allowed) { unchainedCore->setPermission(allowed); }
-unsigned char unchainedReset(const std::string &url) {
+UNCHAINED_API const char* unchainedKey() { return unchainedCore->key(); }
+UNCHAINED_API bool unchainedReady() { return unchainedCore->isReady(); }
+UNCHAINED_API void unchainedPermission(short allowed) { unchainedCore->setPermission(allowed); }
+UNCHAINED_API unsigned char unchainedReset(const std::string &url) {
 
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str());
-    return unchainedCore->reset(url);
+	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str());
+	return unchainedCore->reset(url);
 }
 
 ////// Activity
-unsigned char unchainedStart(const std::string &url, const std::string &version) {
+UNCHAINED_API unsigned char unchainedStart(const std::string &url, const std::string &version) {
 
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str(), version.c_str());
-    return unchainedCore->start(url, version);
+	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str(), version.c_str());
+	return unchainedCore->start(url, version);
 }
 #ifdef __ANDROID__
 void unchainedPause(bool finishing, bool lockScreen) { unchainedCore->pause(finishing, lockScreen); }
 void unchainedDestroy() {
 
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-    Core::freeInstance();
+	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+	Core::freeInstance();
 }
 #else
-void unchainedResume() { unchainedCore->resume(); }
-void unchainedPause() { unchainedCore->pause(); }
+UNCHAINED_API void unchainedResume() { unchainedCore->resume(); }
+UNCHAINED_API void unchainedPause() { unchainedCore->pause(); }
 #endif
-void unchainedStop() {
+UNCHAINED_API void unchainedStop() {
 
-    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-    unchainedCore->stop();
+	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+	unchainedCore->stop();
 }
 
 ////// Resources
-void unchainedAccel(float x, float y, float z) {
+UNCHAINED_API void unchainedAccel(float x, float y, float z) {
 
-    //LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - x:%f; y:%f; z:%f"), __PRETTY_FUNCTION__, __LINE__, x, y, z);
-    unchainedCore->accel(x, y, z);
+	//LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - x:%f; y:%f; z:%f"), __PRETTY_FUNCTION__, __LINE__, x, y, z);
+	unchainedCore->accel(x, y, z);
 }
-void unchainedCamera(const unsigned char* data) { Camera::getInstance()->updateBuffer(data); }
+UNCHAINED_API void unchainedCamera(const unsigned char* data) { Camera::getInstance()->updateBuffer(data); }

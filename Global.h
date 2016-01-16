@@ -30,7 +30,7 @@
 // * android:debuggable="false | true" in the manifest file does not work as well
 // * NDK_DEBUG=0 | 1 definition has no effect
 
-#endif // __ANDROID__
+#endif
 
 
 #define UNCHAINED_COMPONENT

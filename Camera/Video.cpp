@@ -47,7 +47,7 @@ bool Video::reply(const void* data) {
     }
     mLength = MAX_RESPONSE_SIZE;
     checkIncBuffer();
-    sprintf(*mResponse, CAMERA_JSON, playing);
+    sprintf_s(*mResponse, MAX_RESPONSE_SIZE, CAMERA_JSON, playing);
     mLength = static_cast<int>(strlen(*mResponse));
 
     return true;

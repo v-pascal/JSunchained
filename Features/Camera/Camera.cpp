@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Tools/Tools.h>
 #include <Unchained/Log/Log.h>
 #include <Unchained/Storage/Storage.h>
@@ -8,7 +8,7 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 
-#else
+#else // iOS
 #include "Tools.h"
 #include "Log.h"
 #include "Storage.h"
@@ -21,7 +21,7 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #define BUFFER_SIZE_NV21        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 1.5f)
 #else
 #define BUFFER_SIZE_ABGR        (CAM_WIDTH * CAM_HEIGHT * 4)
@@ -38,7 +38,9 @@ Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBu
     mLog = 0;
 #endif
 
-#ifndef __ANDROID__
+#ifdef _WINDLL
+
+#elif !defined(__ANDROID__) // iOS
     mCamera = [[NSCamera alloc] init];
     mCamera.camReady = [mCamera initCamera];
 
@@ -52,7 +54,11 @@ Camera::~Camera() {
     if (mCamBuffer)
         delete [] mCamBuffer;
 
+#ifdef _WINDLL
+
+#elif !defined(__ANDROID__) // iOS
     [mCamera release];
+#endif
 }
 
 bool Camera::start(short width, short height) {
@@ -80,7 +86,10 @@ bool Camera::start(short width, short height) {
     mHeight = height;
 
     if (!env->CallBooleanMethod(g_jResObj, mthd, width, height)) {
-#else
+#elif defined(_WINDLL)
+
+    if (1) {
+#else // iOS
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
          mCamera, (mStarted)? "true":"false");
     assert(mCamera);
@@ -118,7 +127,9 @@ void Camera::pause() {
     if (!mStarted)
         return;
 
-#ifndef __ANDROID__
+#ifdef _WINDLL
+
+#elif !defined(__ANDROID__) // iOS
     assert(!mPaused);
     mPaused = true;
 #endif
@@ -140,8 +151,12 @@ void Camera::resume() {
     if (!mStarted)
         return;
 
+#ifndef _WINDLL // iOS
     assert(mPaused);
     mPaused = false;
+#else
+
+#endif
 }
 #endif
 
@@ -167,6 +182,9 @@ bool Camera::stop() {
         return false;
     }
     if (!env->CallBooleanMethod(g_jResObj, mthd)) {
+#elif defined(_WINDLL)
+
+    if (1) {
 #else
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, mCamera,
             (mStarted)? "true":"false");
@@ -185,7 +203,7 @@ bool Camera::stop() {
     return true;
 }
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 void Camera::updateFrame(GstBuffer* jpeg) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - j:%p"), __PRETTY_FUNCTION__, __LINE__, jpeg);

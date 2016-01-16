@@ -1,12 +1,14 @@
 #ifndef UNCHAINED_VIDEO_H_
 #define UNCHAINED_VIDEO_H_
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Core/Reply.h>
 #include <Unchained/Features/Camera/Camera.h>
-#else
+
+#else // iOS
 #include "Reply.h"
 #include "Camera.h"
+
 #endif
 
 #define HTTP_GET_CAMERA     (HTTP_GET "camera/st")

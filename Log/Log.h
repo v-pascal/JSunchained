@@ -2,6 +2,9 @@
 #define UNCHAINED_LOG_H_
 
 #include <Unchained/Global.h>
+#ifdef _WINDLL
+#define __PRETTY_FUNCTION__     __FUNCSIG__
+#endif
 
 #define LOG_FORMAT(param)       "%s[%d]" param
 #define LOG_LEVEL               5  // 4 level to add log (always log: LOGW, LOGE & LOGF)

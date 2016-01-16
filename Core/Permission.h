@@ -1,10 +1,10 @@
 #ifndef UNCHAINED_PERMISSION_H_
 #define UNCHAINED_PERMISSION_H_
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Core/Reply.h>
 
-#else
+#else // iOS
 #include "Reply.h"
 #import "NSResources.h"
 

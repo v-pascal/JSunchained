@@ -2,7 +2,7 @@
 #define UNCHAINED_TOOLS_H_
 #if defined(__cplusplus)
 
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
 #import <Foundation/Foundation.h>
 #endif
 
@@ -23,7 +23,11 @@
 static const float UNCHAINED_PI = 3.14159265358979f;
 
 //////
+#ifdef _WINDLL
+inline bool fequal(float a, float b) { return (fabs(a - b) <= (FLT_EPSILON * fmax(fabs(a), fabs(b)))); }
+#else
 inline bool fequal(float a, float b) { return (fabs(a - b) <= (FLT_EPSILON * std::max<float>(fabs(a), fabs(b)))); }
+#endif
 
 //////
 template<typename T>
@@ -107,6 +111,9 @@ struct UID {
 extern std::string getUID(UID::Type type, unsigned char logLevel);
 extern std::string getCountry(unsigned char logLevel); // // ISO 3166-1 alpha-3
 */
+
+#elif defined(_WINDLL)
+
 
 #else // iOS
 extern NSString* getCountry(); // // ISO 3166-1 alpha-2

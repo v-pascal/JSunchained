@@ -1,11 +1,13 @@
 #include "Socket.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
-#else
+
+#else // iOS
 #include "Log.h"
 #include "Tools.h"
+
 #endif
 
 #include <sys/socket.h>
@@ -29,7 +31,7 @@ Socket::~Socket() {
 }
 
 bool Socket::open() {
-
+    
     LOGV(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - (s:%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
     assert(mSocket == UNCHAINED_NO_DATA);
 

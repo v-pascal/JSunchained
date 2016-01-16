@@ -1,12 +1,14 @@
 #ifndef UNCHAINED_REPLY_H_
 #define UNCHAINED_REPLY_H_
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
-#else
+
+#else // iOS
 #include "Log.h"
 #include "Tools.h"
+
 #endif
 #include <string>
 #include <assert.h>

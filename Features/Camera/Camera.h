@@ -2,9 +2,9 @@
 #define UNCHAINED_CAMERA_H_
 
 #include <boost/thread.hpp>
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <gst/app/gstappsink.h>
-#else
+#else // iOS
 #import "NSResources.h"
 #endif
 
@@ -20,6 +20,9 @@ class Camera {
 
 #ifdef __ANDROID__
     friend void eos(GstAppSink* sink, gpointer data);
+#elif defined(_WINDLL)
+    friend void eos(GstAppSink* sink, gpointer data);
+    friend class Core;
 #else
     friend class Core;
 #endif
@@ -34,7 +37,7 @@ private:
     boost::mutex mMutex;
 
     bool mStarted;
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
     NSCamera* mCamera;
     bool mPaused; // iOS only coz on Android the stop camera is managed B4 'pause' method call
 #endif
@@ -45,7 +48,7 @@ private:
     short mHeight;
     unsigned int mBufferLen;
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
     void updateFrame(GstBuffer* jpeg);
 #endif
 

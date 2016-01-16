@@ -1,11 +1,13 @@
 #include "Bluetooth.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
-#else
+
+#else // iOS
 #include "Log.h"
 #include "Tools.h"
+
 #endif
 
 

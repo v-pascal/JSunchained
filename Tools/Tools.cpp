@@ -1,8 +1,8 @@
 #include "Tools.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
-#else
+#else // iOS
 #include "Log.h"
 #endif
 
@@ -173,6 +173,7 @@ extern std::string getCountry(unsigned char logLevel) {
     return country;
 }
 */
+#elif defined(_WINDLL)
 
 #else // iOS
 extern NSString* getCountry() { return [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode]; }

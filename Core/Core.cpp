@@ -1,11 +1,13 @@
 #include "Core.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
-#else
+
+#else // iOS
 #include "Log.h"
 #include "Tools.h"
+
 #endif
 
 #define PORT_MIN            1024
@@ -74,7 +76,8 @@ const char* Core::key() {
     mKey = numToHex<int>(random);
 
     time_t now = time(NULL) - (5 * 24 * 60 * 60);
-    struct tm* date = gmtime(&now);
+    struct tm* date = NULL;
+    gmtime_s(date, &now);
     mKey += (date->tm_sec % 10) | 0x30;
     mKey += '_';
 
@@ -158,20 +161,24 @@ void Core::pause(bool finishing, bool lockScreen) {
 void Core::resume() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#ifndef _WINDLL // iOS
     [mSensors.mMotion resume];
+#endif
     Camera::getInstance()->resume();
 }
 void Core::pause() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#ifndef _WINDLL // iOS
     [mSensors.mMotion pause];
+#endif
     Camera::getInstance()->pause();
 }
 #endif
 void Core::stop() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifndef __ANDROID__
+#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
     [mSensors.mMotion stop];
 #endif
     mClose = true;

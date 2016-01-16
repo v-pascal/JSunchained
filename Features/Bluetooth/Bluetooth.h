@@ -4,8 +4,8 @@
 #include <boost/thread.hpp>
 #include <string>
 
-static const char NO_BLUETOOTH_DEVICE[] = "#BT-NONE#";
 
+static const char NO_BLUETOOTH_DEVICE[] = "#BT-NONE#";
 
 //////
 class Bluetooth {

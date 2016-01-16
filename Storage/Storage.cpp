@@ -1,8 +1,8 @@
 #include "Storage.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Log/Log.h>
-#else
+#else // iOS
 #include "Log.h"
 #endif
 #include <boost/filesystem.hpp>
@@ -67,6 +67,9 @@ std::string Storage::getFolder(unsigned char type) {
     }
 #endif
 
+#elif defined(_WINDLL)
+
+
 #else
     NSSearchPathDirectory dirType;
     switch (type) {
@@ -111,6 +114,8 @@ void Storage::init() {
         if ((is_regular_file(dir->status())) && ((!dir->path().extension().compare(".jpg")) ||
                 (!dir->path().extension().compare(".JPG"))))
             mPictures.push_back(new std::string(dir->path().generic_string()));
+#elif defined(_WINDLL)
+
 #else
     NSLog(@"WARNING: Storage not managed yet!");
     //assert(NULL);

@@ -1,18 +1,20 @@
 #ifndef UNCHAINED_CORE_H_
 #define UNCHAINED_CORE_H_
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Features/Internet/Socket.h>
 #include <Unchained/Sensors/Sensors.h>
 #include <Unchained/Storage/Storage.h>
 #include <Unchained/Bluetooth/Discover.h>
 #include <Unchained/Camera/Video.h>
-#else
+
+#else // iOS
 #include "Socket.h"
 #include "Sensors.h"
 #include "Storage.h"
 #include "Discover.h"
 #include "Video.h"
+
 #endif
 #include "Permission.h"
 

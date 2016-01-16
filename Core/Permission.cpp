@@ -108,7 +108,7 @@ bool Permission::reply(const void* data) {
     mLength = static_cast<int>(strlen(*mResponse));
 
 #else
-    sprintf(*mResponse, PERM_JSON, 1, PERMISSION_MASK_ALL);
+    sprintf_s(*mResponse, MAX_RESPONSE_SIZE, PERM_JSON, 1, PERMISSION_MASK_ALL);
     mLength = static_cast<int>(strlen(*mResponse));
 
 #endif

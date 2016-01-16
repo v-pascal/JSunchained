@@ -1,8 +1,8 @@
 #include "Discover.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
 #include <Unchained/Features/Bluetooth/Bluetooth.h>
-#else
+#else // iOS
 #include "Bluetooth.h"
 #endif
 #include <algorithm>
@@ -28,7 +28,7 @@ void Discover::discoveringReply() {
     LOGV(UNCHAINED_LOG_DISCOVER, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
     mLength = MAX_DISCOVER_REPLY;
     checkIncBuffer();
-    sprintf(*mResponse, DISCOVER_JSON, '1', "");
+    sprintf_s(*mResponse, MAX_DISCOVER_REPLY, DISCOVER_JSON, '1', "");
     mLength = static_cast<int>(strlen(*mResponse));
 }
 bool Discover::reply(const void* data) {
@@ -46,7 +46,7 @@ bool Discover::reply(const void* data) {
 
             mLength = MAX_NO_BLUETOOTH_REPLY;
             checkIncBuffer();
-            sprintf(*mResponse, DISCOVER_JSON, '0', NO_BLUETOOTH);
+            sprintf_s(*mResponse, MAX_NO_BLUETOOTH_REPLY, DISCOVER_JSON, '0', NO_BLUETOOTH);
             mLength = static_cast<int>(strlen(*mResponse));
         }
     }
@@ -78,7 +78,7 @@ bool Discover::reply(const void* data) {
             std::replace(devices.begin(), devices.end(), '\n', ' ');
         mLength = static_cast<int>(MAX_DISCOVER_REPLY + devices.length());
         checkIncBuffer();
-        sprintf(*mResponse, DISCOVER_JSON, '0', devices.c_str());
+        sprintf_s(*mResponse, mLength, DISCOVER_JSON, '0', devices.c_str());
         mLength = static_cast<int>(strlen(*mResponse));
     }
     return true;
