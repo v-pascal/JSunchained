@@ -35,7 +35,11 @@ bool Sensors::reply(const void* data) {
     switch (*static_cast<const unsigned char*>(data)) {
 
         case TYPE_ACCEL: {
+#ifdef _WINDLL
             sprintf_s(*mResponse, MAX_RESPONSE_SIZE, ACCEL_JSON, mAccel.x, mAccel.y, mAccel.z);
+#else
+            sprintf(*mResponse, ACCEL_JSON, mAccel.x, mAccel.y, mAccel.z);
+#endif
             mLength = static_cast<int>(strlen(*mResponse));
             break;
         }

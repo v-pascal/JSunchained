@@ -76,8 +76,12 @@ const char* Core::key() {
     mKey = numToHex<int>(random);
 
     time_t now = time(NULL) - (5 * 24 * 60 * 60);
+#ifdef _WINDLL
     struct tm* date = NULL;
     gmtime_s(date, &now);
+#else
+    struct tm* date = gmtime(&now);
+#endif
     mKey += (date->tm_sec % 10) | 0x30;
     mKey += '_';
 

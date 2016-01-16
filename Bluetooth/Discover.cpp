@@ -28,7 +28,11 @@ void Discover::discoveringReply() {
     LOGV(UNCHAINED_LOG_DISCOVER, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
     mLength = MAX_DISCOVER_REPLY;
     checkIncBuffer();
+#ifdef _WINDLL
     sprintf_s(*mResponse, MAX_DISCOVER_REPLY, DISCOVER_JSON, '1', "");
+#else
+    sprintf(*mResponse, DISCOVER_JSON, '1', "");
+#endif
     mLength = static_cast<int>(strlen(*mResponse));
 }
 bool Discover::reply(const void* data) {
@@ -46,7 +50,11 @@ bool Discover::reply(const void* data) {
 
             mLength = MAX_NO_BLUETOOTH_REPLY;
             checkIncBuffer();
+#ifdef _WINDLL
             sprintf_s(*mResponse, MAX_NO_BLUETOOTH_REPLY, DISCOVER_JSON, '0', NO_BLUETOOTH);
+#else
+            sprintf(*mResponse, DISCOVER_JSON, '0', NO_BLUETOOTH);
+#endif
             mLength = static_cast<int>(strlen(*mResponse));
         }
     }
@@ -78,7 +86,11 @@ bool Discover::reply(const void* data) {
             std::replace(devices.begin(), devices.end(), '\n', ' ');
         mLength = static_cast<int>(MAX_DISCOVER_REPLY + devices.length());
         checkIncBuffer();
+#ifdef _WINDLL
         sprintf_s(*mResponse, mLength, DISCOVER_JSON, '0', devices.c_str());
+#else
+        sprintf(*mResponse, DISCOVER_JSON, '0', devices.c_str());
+#endif
         mLength = static_cast<int>(strlen(*mResponse));
     }
     return true;
