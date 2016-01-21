@@ -30,6 +30,11 @@
 // * android:debuggable="false | true" in the manifest file does not work as well
 // * NDK_DEBUG=0 | 1 definition has no effect
 
+#elif defined(_WINDLL)
+#ifdef _DEBUG
+#define DEBUG
+#endif
+
 #endif
 
 
@@ -59,6 +64,13 @@ enum {
 extern JavaVM* g_jVM;
 extern jclass g_jResClass;
 extern jobject g_jResObj;
+
+#elif _WINDLL
+typedef bool(*StartCamCB)(char, short, short);
+typedef bool(*StopCamCB)();
+
+extern StartCamCB g_cbStartCam;
+extern StopCamCB g_cbStopCam;
 
 #endif
 

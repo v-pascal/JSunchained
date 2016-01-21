@@ -3,6 +3,9 @@
 #if defined(__cplusplus)
 
 #include <Unchained/Global.h>
+#ifdef _WINDLL
+#include <winsock2.h>
+#endif
 
 #include <string>
 #include <boost/thread.hpp>
@@ -16,6 +19,9 @@ private:
     bool mServer;
     int mSocket;
     std::vector<int> mClients;
+#ifdef _WINDLL
+    WSADATA mWSAD;
+#endif
 
     volatile bool mAbort;
     boost::mutex mMutex;
@@ -35,8 +41,8 @@ public:
     void shutdown();
 
     int receive(char* buffer, size_t max, unsigned char clientIdx = 0) const;
-    int send(const char* buffer, size_t len, unsigned char clientIdx = 0) const;
-    // -> Return respectively 'read' & 'write' function result
+    int Send(const char* buffer, size_t len, unsigned char clientIdx = 0) const;
+    // -> Return respectively 'read/recv' & 'write/send' function result
     // -> 'clientIdx' is usefull for client mode only
 
     // Client

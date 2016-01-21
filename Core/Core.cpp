@@ -209,7 +209,7 @@ void Core::exit(bool reset) {
     reply.append(HTTP_REPLY_CLOSE);
     for (short i = (mSocket->getClientCount() - 1); i > UNCHAINED_NO_DATA; --i) {
 
-        if (mSocket->send(reply.c_str(), reply.length(), i) != reply.length()) {
+        if (mSocket->Send(reply.c_str(), reply.length(), i) != reply.length()) {
             LOGE(LOG_FORMAT(" - Failed to close connection"), __PRETTY_FUNCTION__, __LINE__);
         }
     }
@@ -230,7 +230,7 @@ bool Core::reply(int len, unsigned char idx) {
     while (len > 0) {
 
         int packetLen = (len > MAX_SOCKET_BUFFER)? MAX_SOCKET_BUFFER:len;
-        if (mSocket->send(mReply + sent, packetLen, idx) != packetLen)
+        if (mSocket->Send(mReply + sent, packetLen, idx) != packetLen)
             return false;
 
         if (len > MAX_SOCKET_BUFFER)
@@ -324,7 +324,7 @@ void Core::coreThreadRunning() {
 
                             std::string headReply(mHead);
                             headReply.append(HTTP_HEAD_BODY);
-                            if (mSocket->send(headReply.c_str(), headReply.length(), i) != headReply.length()) {
+                            if (mSocket->Send(headReply.c_str(), headReply.length(), i) != headReply.length()) {
 
                                 LOGE(LOG_FORMAT(" - Failed to send head reply (%d)"), __PRETTY_FUNCTION__, __LINE__, i);
                                 quit = close(i);
@@ -416,7 +416,7 @@ void Core::coreThreadRunning() {
                             response.append(numToStr<int>(static_cast<int>(replyObj->getLength())));
                             response += '\n';
                             response += '\n';
-                            if ((mSocket->send(response.c_str(), response.length(), i) != response.length()) ||
+                            if ((mSocket->Send(response.c_str(), response.length(), i) != response.length()) ||
                                     (!reply(replyObj->getLength(), i))) {
 
                                 LOGE(LOG_FORMAT(" - Failed to send reply (%d)"), __PRETTY_FUNCTION__, __LINE__, i);

@@ -39,6 +39,7 @@ Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBu
 #endif
 
 #ifdef _WINDLL
+    gst_init(NULL, NULL);
 
 #elif !defined(__ANDROID__) // iOS
     mCamera = [[NSCamera alloc] init];
@@ -55,6 +56,7 @@ Camera::~Camera() {
         delete [] mCamBuffer;
 
 #ifdef _WINDLL
+    gst_deinit();
 
 #elif !defined(__ANDROID__) // iOS
     [mCamera release];
@@ -87,8 +89,9 @@ bool Camera::start(short width, short height) {
 
     if (!env->CallBooleanMethod(g_jResObj, mthd, width, height)) {
 #elif defined(_WINDLL)
+    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%p)"), __PRETTY_FUNCTION__, __LINE__, g_cbStartCam);
 
-    if (1) {
+    if (!g_cbStartCam(0, width, height)) {
 #else // iOS
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
          mCamera, (mStarted)? "true":"false");
@@ -183,8 +186,9 @@ bool Camera::stop() {
     }
     if (!env->CallBooleanMethod(g_jResObj, mthd)) {
 #elif defined(_WINDLL)
+    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%p)"), __PRETTY_FUNCTION__, __LINE__, g_cbStopCam);
 
-    if (1) {
+    if (!g_cbStopCam) {
 #else
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, mCamera,
             (mStarted)? "true":"false");

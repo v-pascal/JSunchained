@@ -21,9 +21,17 @@ JavaVM* g_jVM = NULL;
 jclass g_jResClass = NULL;
 jobject g_jResObj = NULL;
 
+#elif defined(_WINDLL)
+StartCamCB g_cbStartCam = NULL;
+StopCamCB g_cbStopCam = NULL;
+
 #endif
 
 Core* unchainedCore = NULL;
+
+#ifdef _WINDLL
+extern "C" {
+#endif
 
 ////// Core
 UNCHAINED_API void unchainedInit(const PlatformData* data) {
@@ -35,6 +43,8 @@ UNCHAINED_API void unchainedInit(const PlatformData* data) {
 	g_jResObj = data->res;
 
 #elif defined(_WINDLL)
+    g_cbStartCam = data->startCam;
+    g_cbStopCam = data->stopCam;
 
 #else
 	lib_gst_init();
@@ -70,7 +80,7 @@ UNCHAINED_API void unchainedPause() { unchainedCore->pause(); }
 UNCHAINED_API void unchainedStop() {
 
 	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-	unchainedCore->stop();
+    unchainedCore->stop();
 }
 
 ////// Resources
@@ -80,3 +90,7 @@ UNCHAINED_API void unchainedAccel(float x, float y, float z) {
 	unchainedCore->accel(x, y, z);
 }
 UNCHAINED_API void unchainedCamera(const unsigned char* data) { Camera::getInstance()->updateBuffer(data); }
+
+#ifdef _WINDLL
+}
+#endif

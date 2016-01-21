@@ -3,12 +3,13 @@
 
 #include <Unchained/Global.h>
 #ifdef _WINDLL
-#define __PRETTY_FUNCTION__     __FUNCSIG__
+#define __PRETTY_FUNCTION__                 __FUNCSIG__
+#define LOG_FORMAT(param)                   "%s (%s): %s[%d]" param "\n"
+#else
+#define LOG_FORMAT(param)                   "%s[%d]" param
 #endif
-
-#define LOG_FORMAT(param)       "%s[%d]" param
-#define LOG_LEVEL               5  // 4 level to add log (always log: LOGW, LOGE & LOGF)
-                                    // Possible use: LOGI(LOG_LEVEL_MODULE + n, ... );
+#define LOG_LEVEL                           5  // 4 level to add log (always log: LOGW, LOGE & LOGF)
+                                               // Possible use: LOGI(LOG_LEVEL_MODULE + n, ... );
 typedef enum {
 
 #ifdef DEBUG
@@ -32,17 +33,17 @@ typedef enum {
 
 #ifdef DEBUG
 #define LOGU(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_UNKNOWN, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_UNKNOWN, "JSunchained", format, __VA_ARGS__); }
 #define LOGD(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_DEFAULT, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_DEFAULT, "JSunchained", format, __VA_ARGS__); }
 #define LOGV(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_VERBOSE, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_VERBOSE, "JSunchained", format, __VA_ARGS__); }
 #define LOGDE(level, mod, format, ...)      if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_DEBUG, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_DEBUG, "JSunchained", format, __VA_ARGS__); }
 #define LOGI(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_INFO, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_INFO, "JSunchained", format, __VA_ARGS__); }
 #define LOGS(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
-                                             { __android_log_print(ANDROID_LOG_SILENT, "JSunchained", format, __VA_ARGS__); }
+                                            { __android_log_print(ANDROID_LOG_SILENT, "JSunchained", format, __VA_ARGS__); }
 
 #else
 #define LOGU(level, mod, format, ...)       ((void)0)
@@ -57,7 +58,58 @@ typedef enum {
 #define LOGE(format, ...)                   __android_log_print(ANDROID_LOG_ERROR, "JSunchained", format, __VA_ARGS__);
 #define LOGF(format, ...)                   __android_log_print(ANDROID_LOG_FATAL, "JSunchained", format, __VA_ARGS__);
 
-#else // !__ANDROID__
+#elif defined(_WINDLL)
+#include <stdio.h>
+#include <windows.h>
+
+#define MAX_LOG_SIZE                        256
+
+#ifdef DEBUG
+#define LOGU(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "UNKNOWN", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGD(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "DEFAULT", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGV(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "VERBOSE", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGDE(level, mod, format, ...)      if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "DEBUG", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGI(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "INFO", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGS(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
+                                            { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "SILENT", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+
+#else
+#define LOGU(level, mod, format, ...)       ((void)0)
+#define LOGD(level, mod, format, ...)       ((void)0)
+#define LOGV(level, mod, format, ...)       ((void)0)
+#define LOGDE(level, mod, format, ...)      ((void)0)
+#define LOGI(level, mod, format, ...)       ((void)0)
+#define LOGS(level, mod, format, ...)       ((void)0)
+
+#endif
+#define LOGW(format, ...)                   { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "WARNING", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGE(format, ...)                   { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "ERROR", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+#define LOGF(format, ...)                   { char log[MAX_LOG_SIZE]={0}; \
+                                              sprintf_s(log, MAX_LOG_SIZE, format, "FATAL", "JSunchained", __VA_ARGS__); \
+                                              OutputDebugStringA(log); }
+
+#else // iOS
 
 #ifdef DEBUG
 extern "C" {

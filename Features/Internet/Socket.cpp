@@ -10,14 +10,26 @@
 
 #endif
 
+#ifdef _WINDLL
+#include <ws2tcpip.h>
+
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <fcntl.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
+
+#endif
+
+#ifdef _WINDLL
+#undef UNCHAINED_NO_DATA
+#define UNCHAINED_NO_DATA       INVALID_SOCKET
+#endif
 
 #define MAX_CLIENT_COUNT        254
 #define ACCEPT_DELAY            500 // Half a second
+
 
 //////
 Socket::Socket(bool server) : mServer(server), mThread(NULL), mSocket(UNCHAINED_NO_DATA), mAbort(true) {
@@ -35,17 +47,40 @@ bool Socket::open() {
     LOGV(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - (s:%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
     assert(mSocket == UNCHAINED_NO_DATA);
 
-    mSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (mSocket < 0) {
+#ifdef _WINDLL
+    mSocket = WSAStartup(MAKEWORD(2, 2), &mWSAD);
+    if (mSocket != 0) {
 
-        LOGE(LOG_FORMAT(" - Failed to open socket (%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
+        LOGE(LOG_FORMAT(" - WSAStartup failed with error: %d"), __PRETTY_FUNCTION__, __LINE__, mSocket);
         mSocket = UNCHAINED_NO_DATA;
         return false;
     }
+#endif
+    mSocket = socket(AF_INET, SOCK_STREAM, 0);
+#ifdef _WINDLL
+    if (mSocket == INVALID_SOCKET) {
+#else
+    if (mSocket < 0) {
+#endif
+        LOGE(LOG_FORMAT(" - Failed to open socket (%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
+        mSocket = UNCHAINED_NO_DATA;
+#ifdef _WINDLL
+        WSACleanup();
+#endif
+        return false;
+    }
+#ifdef _WINDLL
+    u_long blockMode = 0;
+    if (!mServer)
+        blockMode = 1;
+
+    ioctlsocket(mSocket, FIONBIO, &blockMode);
+#else
     if (mServer)
         fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) | O_NONBLOCK);
     else
         fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) & ~O_NONBLOCK);
+#endif
     return true;
 }
 void Socket::shutdown() {
@@ -59,40 +94,64 @@ void Socket::shutdown() {
         mThread = NULL;
     }
     for (std::vector<int>::iterator iter = mClients.begin(); iter != mClients.end(); ++iter)
+#ifdef _WINDLL
+        closesocket(*iter);
+#else
         close(*iter);
+#endif
     mClients.clear();
 
+#ifndef _WINDLL
     if (!(mSocket < 0))
         close(mSocket);
+#else
+    if (mSocket != INVALID_SOCKET)
+        closesocket(mSocket);
 
+    WSACleanup();
+#endif
     mSocket = UNCHAINED_NO_DATA;
 }
 
 int Socket::receive(char* buffer, size_t max, unsigned char clientIdx) const {
 
+#ifdef _WINDLL
+    if (mSocket == INVALID_SOCKET) {
+#else
     if (mSocket < 0) {
-
+#endif
         LOGW(LOG_FORMAT(" - Socket not opened"), __PRETTY_FUNCTION__, __LINE__);
         assert(NULL);
         return UNCHAINED_NO_DATA;
     }
     assert((!mServer) || ((mServer) && (mClients.size() > clientIdx)));
     int socket = (!mServer)? mSocket:mClients[clientIdx];
+#ifdef _WINDLL
+    return recv(socket, buffer, max, 0);
+#else
     return static_cast<int>(read(socket, buffer, max));
+#endif
 }
-int Socket::send(const char* buffer, size_t len, unsigned char clientIdx) const {
+int Socket::Send(const char* buffer, size_t len, unsigned char clientIdx) const {
 
     LOGV(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - b:%p; s:%d; i:%d (s:%s; l:%d)"), __PRETTY_FUNCTION__, __LINE__, buffer,
             static_cast<int>(len), clientIdx, (mServer)? "true":"false", static_cast<int>(mClients.size()));
+#ifdef _WINDLL
+    if (mSocket == INVALID_SOCKET) {
+#else
     if (mSocket < 0) {
-
+#endif
         LOGW(LOG_FORMAT(" - Socket not opened"), __PRETTY_FUNCTION__, __LINE__);
         assert(NULL);
         return false;
     }
     assert((!mServer) || ((mServer) && (mClients.size() > clientIdx)));
     int socket = (!mServer)? mSocket:mClients[clientIdx];
+#ifdef _WINDLL
+    return send(socket, buffer, static_cast<int>(len), 0);
+#else
     return static_cast<int>(write(socket, buffer, len));
+#endif
 }
 
 bool Socket::connexion(const std::string &host, int port) {
@@ -107,9 +166,9 @@ bool Socket::connexion(const std::string &host, int port) {
     // Method #1
     struct in_addr ipAddr;
     inet_pton(AF_INET, host.c_str(), &ipAddr);
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(_WINDLL)
     struct hostent* server = gethostbyaddr((const char*)&ipAddr, sizeof(ipAddr), AF_INET);
-#else
+#else // iOS
     struct hostent* server = gethostbyaddr(&ipAddr, sizeof(ipAddr), AF_INET);
 #endif
     if (!server) {
@@ -125,23 +184,36 @@ bool Socket::connexion(const std::string &host, int port) {
         struct sockaddr_in servAddr;
         std::memset(&servAddr, 0, sizeof(servAddr));
         servAddr.sin_family = AF_INET;
-        bcopy((char*)server->h_addr, (char*)&servAddr.sin_addr.s_addr, server->h_length);
+        memcpy(&servAddr.sin_addr.s_addr, server->h_addr, server->h_length);
 
         servAddr.sin_port = htons(port);
         if (connect(mSocket, (struct sockaddr*)&servAddr, sizeof(servAddr)) < 0) {
 
             LOGW(LOG_FORMAT(" - Failed to connect #1: %s:%d (%d)"), __PRETTY_FUNCTION__, __LINE__, host.c_str(), port,
                  static_cast<int>(errno));
+#ifdef _WINDLL
+            WSACleanup();
+#endif
         }
         else {
 
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #1: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
+#ifdef _WINDLL
+            u_long nonBlock = 0;
+            ioctlsocket(mSocket, FIONBIO, &nonBlock);
+#else
             fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) | O_NONBLOCK);
+#endif
             return true; // Connected
         }
     }
+#ifdef _WINDLL
+    closesocket(mSocket);
+    WSACleanup();
+#else
     close(mSocket);
+#endif
     mSocket = UNCHAINED_NO_DATA;
 
     // Method #2
@@ -154,29 +226,48 @@ bool Socket::connexion(const std::string &host, int port) {
     if (gaiRes != 0) {
 
         LOGW(LOG_FORMAT(" - Failed to get address info: %s"), __PRETTY_FUNCTION__, __LINE__, gai_strerror(gaiRes));
+#ifdef _WINDLL
+        WSACleanup();
+#endif
         return false;
     }
     for (struct addrinfo* walk = result; walk; walk = walk->ai_next) {
         if (!open()) {
 
             freeaddrinfo(result);
+#ifdef _WINDLL
+            WSACleanup();
+#endif
             return false;
         }
         if (connect(mSocket, walk->ai_addr, walk->ai_addrlen) < 0) {
             LOGW(LOG_FORMAT(" - Connexion failed (err: %d)"), __PRETTY_FUNCTION__, __LINE__, static_cast<int>(errno));
+#ifdef _WINDLL
+            WSACleanup();
+#endif
         }
         else {
 
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #2: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
+#ifdef _WINDLL
+            u_long nonBlock = 0;
+            ioctlsocket(mSocket, FIONBIO, &nonBlock);
+#else
             fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) | O_NONBLOCK);
+#endif
             freeaddrinfo(result);
             return true; // Connected
         }
     }
     LOGW(LOG_FORMAT(" - Failed to connect #2: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(), port);
     freeaddrinfo(result);
+#ifdef _WINDLL
+    closesocket(mSocket);
+    WSACleanup();
+#else
     close(mSocket);
+#endif
     mSocket = UNCHAINED_NO_DATA;
     return false;
 }
@@ -192,8 +283,11 @@ bool Socket::start(int port) {
         assert(NULL);
         return false;
     }
+#ifdef _WINDLL
+    if (mSocket == INVALID_SOCKET) {
+#else
     if (mSocket < 0) {
-
+#endif
         LOGW(LOG_FORMAT(" - Socket not opened"), __PRETTY_FUNCTION__, __LINE__);
         assert(NULL);
         return false;
@@ -235,8 +329,12 @@ void Socket::closeClient(unsigned char clientIdx) {
 
     mMutex.lock();
     std::vector<int>::iterator iter = (mClients.begin() + clientIdx); // Index still good even if just added one
+#ifdef _WINDLL
+    closesocket(*iter);
+    WSACleanup();
+#else
     close(*iter);
-
+#endif
     mClients.erase(iter);
     mMutex.unlock();
 }
@@ -251,8 +349,11 @@ void Socket::serverThreadRunning() {
         struct sockaddr_in cli_addr;
         socklen_t clilen = sizeof(cli_addr);
         int newSocket = accept(mSocket, (struct sockaddr*)&cli_addr, &clilen);
+#ifdef _WINDLL
+        if (newSocket == INVALID_SOCKET) {
+#else
         if (newSocket < 0) {
-
+#endif
             switch (errno) {
                 case EWOULDBLOCK: // EAGAIN
                     break; // No new client
@@ -266,8 +367,12 @@ void Socket::serverThreadRunning() {
             }
             continue;
         }
+#ifdef _WINDLL
+        u_long nonBlock = 0;
+        ioctlsocket(newSocket, FIONBIO, &nonBlock);
+#else
         fcntl(newSocket, F_SETFL, fcntl(newSocket, F_GETFL, 0) | O_NONBLOCK);
-
+#endif
         mMutex.lock();
         mClients.push_back(newSocket);
         mMutex.unlock();

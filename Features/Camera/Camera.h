@@ -1,7 +1,11 @@
 #ifndef UNCHAINED_CAMERA_H_
 #define UNCHAINED_CAMERA_H_
 
+#ifdef _WINDLL
+#include <Unchained\Global.h>
+#endif
 #include <boost/thread.hpp>
+
 #if defined(__ANDROID__) || defined(_WINDLL)
 #include <gst/app/gstappsink.h>
 #else // iOS
@@ -23,7 +27,7 @@ class Camera {
 #elif defined(_WINDLL)
     friend void eos(GstAppSink* sink, gpointer data);
     friend class Core;
-#else
+#else // iOS
     friend class Core;
 #endif
 

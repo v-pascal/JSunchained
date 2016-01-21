@@ -14,17 +14,25 @@
 #define UNCHAINED_API
 #endif
 
+#ifdef _WINDLL
+extern "C" {
+#endif
 
 typedef struct {
 
 #ifdef __ANDROID__
-	JavaVM* jvm;
-	jclass cls;
-	jobject res;
+    JavaVM* jvm;
+    jclass cls;
+    jobject res;
 
 #endif
-	float xDpi;
-	float yDpi;
+    float xDpi;
+    float yDpi;
+
+#ifdef _WINDLL
+    StartCamCB startCam;
+    StopCamCB stopCam;
+#endif
 
 } PlatformData;
 
@@ -50,5 +58,8 @@ UNCHAINED_API void unchainedStop();
 UNCHAINED_API void unchainedAccel(float x, float y, float z);
 UNCHAINED_API void unchainedCamera(const unsigned char* data);
 
+#ifdef _WINDLL
+}
+#endif
 
 #endif // UNCHAINED_H_
