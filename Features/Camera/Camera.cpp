@@ -21,8 +21,10 @@
 #include <iostream>
 #include <fstream>
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#ifdef __ANDROID__
 #define BUFFER_SIZE_NV21        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 1.5f)
+#elif defined(_WINDLL)
+#define BUFFER_SIZE_RGBA        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 4)
 #else
 #define BUFFER_SIZE_ABGR        (CAM_WIDTH * CAM_HEIGHT * 4)
 #endif
@@ -258,7 +260,11 @@ void Camera::updateBuffer(const unsigned char* data) {
 
     g_object_set(G_OBJECT(appsrc), "caps",
             gst_caps_new_simple("video/x-raw",
+#ifdef __ANDROID__
                  "format", G_TYPE_STRING, "NV21",
+#else // Windows
+                 "format", G_TYPE_STRING, "RGBA",
+#endif
                  "width", G_TYPE_INT, CAM_WIDTH,
                  "height", G_TYPE_INT, CAM_HEIGHT,
                  "framerate", GST_TYPE_FRACTION, 1, 1,
@@ -268,7 +274,11 @@ void Camera::updateBuffer(const unsigned char* data) {
     gst_element_link_many(appsrc, conv, jpegenc, appsink, NULL);
 
     GstBuffer* raw = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY, const_cast<unsigned char*>(data),
+#ifdef __ANDROID__
             BUFFER_SIZE_NV21, 0, BUFFER_SIZE_NV21, const_cast<unsigned char*>(data), NULL);
+#else // Windows
+            BUFFER_SIZE_RGBA, 0, BUFFER_SIZE_RGBA, const_cast<unsigned char*>(data), NULL);
+#endif
     gst_app_src_push_buffer(GST_APP_SRC(appsrc), raw);
     gst_app_src_end_of_stream(GST_APP_SRC(appsrc));
 
