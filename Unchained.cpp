@@ -1,4 +1,4 @@
-﻿#include "Unchained.h"
+#include "Unchained.h"
 
 #if defined(__ANDROID__) || defined(_WINDLL)
 #ifdef __ANDROID__
@@ -54,17 +54,29 @@ UNCHAINED_API void unchainedInit(const PlatformData* data) {
 UNCHAINED_API const char* unchainedKey() { return unchainedCore->key(); }
 UNCHAINED_API bool unchainedReady() { return unchainedCore->isReady(); }
 UNCHAINED_API void unchainedPermission(short allowed) { unchainedCore->setPermission(allowed); }
-UNCHAINED_API unsigned char unchainedReset(const std::string &url) {
+#ifdef _WINDLL
+UNCHAINED_API unsigned char unchainedReset(const char* url) {
 
-	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str());
+    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url);
+#else
+unsigned char unchainedReset(const std::string &url) {
+
+    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str());
+#endif
 	return unchainedCore->reset(url);
 }
 
 ////// Activity
-UNCHAINED_API unsigned char unchainedStart(const std::string &url, const std::string &version) {
+#ifdef _WINDLL
+UNCHAINED_API unsigned char unchainedStart(const char* url, const char* version) {
 
-	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str(), version.c_str());
-	return unchainedCore->start(url, version);
+    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url, version);
+#else
+unsigned char unchainedStart(const std::string &url, const std::string &version) {
+
+    LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str(), version.c_str());
+#endif
+    return unchainedCore->start(url, version);
 }
 #ifdef __ANDROID__
 void unchainedPause(bool finishing, bool lockScreen) { unchainedCore->pause(finishing, lockScreen); }
