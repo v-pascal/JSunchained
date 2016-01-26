@@ -62,7 +62,7 @@ typedef enum {
 #include <stdio.h>
 #include <windows.h>
 
-#define MAX_LOG_SIZE                        256
+#define MAX_LOG_SIZE                        1024
 
 #ifdef DEBUG
 #define LOGU(level, mod, format, ...)       if ((level < LOG_LEVEL) && (!mod)) \
