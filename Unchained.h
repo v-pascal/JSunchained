@@ -1,4 +1,4 @@
-﻿#ifndef UNCHAINED_H_
+#ifndef UNCHAINED_H_
 #define UNCHAINED_H_
 
 #include "Global.h"
@@ -41,10 +41,18 @@ UNCHAINED_API void unchainedInit(const PlatformData* data);
 UNCHAINED_API const char* unchainedKey();
 UNCHAINED_API bool unchainedReady();
 UNCHAINED_API void unchainedPermission(short allowed);
-UNCHAINED_API unsigned char unchainedReset(const std::string &url);
+#ifdef _WINDLL
+UNCHAINED_API unsigned char unchainedReset(const char* url);
+#else
+unsigned char unchainedReset(const std::string &url);
+#endif
 
 ////// Activity
-UNCHAINED_API unsigned char unchainedStart(const std::string &url, const std::string &version);
+#ifdef _WINDLL
+UNCHAINED_API unsigned char unchainedStart(const char* url, const char* version);
+#else
+unsigned char unchainedStart(const std::string &url, const std::string &version);
+#endif
 #ifdef __ANDROID__
 void unchainedPause(bool finishing, bool lockScreen);
 void unchainedDestroy();
