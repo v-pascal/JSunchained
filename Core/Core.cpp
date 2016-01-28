@@ -291,8 +291,15 @@ void Core::coreThreadRunning() {
             if (rcvLen < 0) {
 
                 bool quit = false;
-                switch (errno) {
+#ifdef _WINDLL
+                int err = WSAGetLastError();
+                switch (err) {
+                    case WSAEWOULDBLOCK: {
+#else
+                int err = errno;
+                switch (err) {
                     case EWOULDBLOCK: { // EAGAIN
+#endif
                         if (!mConnexions[i]->Length)
                             break; // No data received
 
@@ -433,7 +440,7 @@ void Core::coreThreadRunning() {
                     }
                     default: {
 
-                        LOGE(LOG_FORMAT(" - Receiving data error (%d)"), __PRETTY_FUNCTION__, __LINE__, i);
+                        LOGE(LOG_FORMAT(" - Receiving data error: %d (%d)"), __PRETTY_FUNCTION__, __LINE__, err, i);
                         quit = close(i);
                         break;
                     }
