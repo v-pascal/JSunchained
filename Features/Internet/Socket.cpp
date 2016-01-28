@@ -71,8 +71,8 @@ bool Socket::open() {
     }
 #ifdef _WINDLL
     u_long blockMode = 0;
-    if (!mServer)
-        blockMode = 1;
+    if (mServer)
+        blockMode = 1; // Non-blocking
 
     ioctlsocket(mSocket, FIONBIO, &blockMode);
 #else
@@ -200,7 +200,7 @@ bool Socket::connexion(const std::string &host, int port) {
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #1: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
 #ifdef _WINDLL
-            u_long nonBlock = 0;
+            u_long nonBlock = 1;
             ioctlsocket(mSocket, FIONBIO, &nonBlock);
 #else
             fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) | O_NONBLOCK);
@@ -251,7 +251,7 @@ bool Socket::connexion(const std::string &host, int port) {
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #2: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
 #ifdef _WINDLL
-            u_long nonBlock = 0;
+            u_long nonBlock = 1;
             ioctlsocket(mSocket, FIONBIO, &nonBlock);
 #else
             fcntl(mSocket, F_SETFL, fcntl(mSocket, F_GETFL, 0) | O_NONBLOCK);
@@ -351,16 +351,27 @@ void Socket::serverThreadRunning() {
         int newSocket = accept(mSocket, (struct sockaddr*)&cli_addr, &clilen);
 #ifdef _WINDLL
         if (newSocket == INVALID_SOCKET) {
+
+            int err = WSAGetLastError();
+            switch (err) {
+                case WSAEWOULDBLOCK:
+                    break; // No new client
+
+                default: {
+
+                    LOGW(LOG_FORMAT(" - Failed to accept client (%d)"), __PRETTY_FUNCTION__, __LINE__, err);
 #else
         if (newSocket < 0) {
-#endif
-            switch (errno) {
+
+            int err = errno;
+            switch (err) {
                 case EWOULDBLOCK: // EAGAIN
                     break; // No new client
 
                 default: {
 
-                    LOGW(LOG_FORMAT(" - Failed to accept client (%d)"), __PRETTY_FUNCTION__, __LINE__, newSocket);
+                    LOGW(LOG_FORMAT(" - Failed to accept client (%d)"), __PRETTY_FUNCTION__, __LINE__, err);
+#endif
                     assert(NULL);
                     break;
                 }
@@ -368,7 +379,7 @@ void Socket::serverThreadRunning() {
             continue;
         }
 #ifdef _WINDLL
-        u_long nonBlock = 0;
+        u_long nonBlock = 1;
         ioctlsocket(newSocket, FIONBIO, &nonBlock);
 #else
         fcntl(newSocket, F_SETFL, fcntl(newSocket, F_GETFL, 0) | O_NONBLOCK);
