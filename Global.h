@@ -66,8 +66,10 @@ extern jclass g_jResClass;
 extern jobject g_jResObj;
 
 #elif _WINDLL
-typedef bool(*StartCamCB)(char, short, short);
-typedef bool(*StopCamCB)();
+extern "C" {
+    typedef bool(__stdcall *StartCamCB)(unsigned char, short, short);
+    typedef bool(__stdcall *StopCamCB)();
+}
 
 extern StartCamCB g_cbStartCam;
 extern StopCamCB g_cbStopCam;
