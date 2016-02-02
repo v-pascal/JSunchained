@@ -66,6 +66,8 @@ extern jclass g_jResClass;
 extern jobject g_jResObj;
 
 #elif _WINDLL
+#include <string>
+
 extern "C" {
     typedef bool(__stdcall *StartCamCB)(unsigned char, short, short);
     typedef bool(__stdcall *StopCamCB)();
@@ -73,6 +75,8 @@ extern "C" {
 
 extern StartCamCB g_cbStartCam;
 extern StopCamCB g_cbStopCam;
+
+extern std::string* g_AppPath;
 
 #endif
 

@@ -35,13 +35,21 @@ Camera* Camera::mThis = NULL;
 //////
 Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBufferLen(0) {
 
+#ifndef _WINDLL
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
+#else
+    LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (a:%p)"), __PRETTY_FUNCTION__, __LINE__, g_AppPath);
+#endif
+
 #ifdef DEBUG
     mLog = 0;
 #endif
 
 #ifdef _WINDLL
     gst_init(NULL, NULL);
+
+    mRegistry = gst_registry_get();
+    gst_registry_scan_path(mRegistry, g_AppPath->c_str());
 
 #elif !defined(__ANDROID__) // iOS
     mCamera = [[NSCamera alloc] init];
@@ -58,6 +66,7 @@ Camera::~Camera() {
         delete [] mCamBuffer;
 
 #ifdef _WINDLL
+    gst_object_unref(mRegistry);
     gst_deinit();
 
 #elif !defined(__ANDROID__) // iOS
@@ -232,9 +241,23 @@ typedef struct {
 void eos(GstAppSink* sink, gpointer data) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - a:%p; d:%p"), __PRETTY_FUNCTION__, __LINE__, sink, data);
+#ifdef __ANDROID__
     static_cast<eosData*>(data)->obj->updateFrame(gst_sample_get_buffer(gst_app_sink_pull_sample(GST_APP_SINK(sink))));
+#endif
     g_main_loop_quit(static_cast<eosData*>(data)->loop);
 }
+#ifdef _WINDLL
+GstFlowReturn newPreroll(GstAppSink *sink, gpointer data) {
+
+    GstSample* sample = gst_app_sink_pull_preroll(sink);
+    static_cast<eosData*>(data)->obj->updateFrame(gst_sample_get_buffer(sample));
+    gst_sample_unref(sample);
+
+    return GST_FLOW_CUSTOM_SUCCESS;
+}
+GstFlowReturn newSample(GstAppSink *appsink, gpointer data) { return GST_FLOW_CUSTOM_SUCCESS; }
+#endif
+
 void Camera::updateBuffer(const unsigned char* data) {
 
 #ifdef DEBUG
@@ -282,7 +305,11 @@ void Camera::updateBuffer(const unsigned char* data) {
     gst_app_src_push_buffer(GST_APP_SRC(appsrc), raw);
     gst_app_src_end_of_stream(GST_APP_SRC(appsrc));
 
+#ifdef _WINDLL
+    GstAppSinkCallbacks callbacks = { eos, newPreroll, newSample };
+#else
     GstAppSinkCallbacks callbacks = { eos, NULL, NULL };
+#endif
     eosData eosParam  = { this, loop };
     gst_app_sink_set_callbacks(GST_APP_SINK(appsink), &callbacks, &eosParam, NULL);
 

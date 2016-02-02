@@ -1,4 +1,4 @@
-#include "Unchained.h"
+﻿#include "Unchained.h"
 
 #if defined(__ANDROID__) || defined(_WINDLL)
 #ifdef __ANDROID__
@@ -25,6 +25,8 @@ jobject g_jResObj = NULL;
 StartCamCB g_cbStartCam = NULL;
 StopCamCB g_cbStopCam = NULL;
 
+std::string* g_AppPath = NULL;
+
 #endif
 
 Core* unchainedCore = NULL;
@@ -45,6 +47,8 @@ UNCHAINED_API void unchainedInit(const PlatformData* data) {
 #elif defined(_WINDLL)
     g_cbStartCam = data->startCam;
     g_cbStopCam = data->stopCam;
+
+    g_AppPath = new std::string(data->appPath);
 
 #else
 	lib_gst_init();

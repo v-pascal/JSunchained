@@ -1,4 +1,4 @@
-#ifndef UNCHAINED_H_
+﻿#ifndef UNCHAINED_H_
 #define UNCHAINED_H_
 
 #include "Global.h"
@@ -32,6 +32,8 @@ typedef struct {
 #ifdef _WINDLL
     StartCamCB startCam;
     StopCamCB stopCam;
+
+    const char* appPath;
 #endif
 
 } PlatformData;

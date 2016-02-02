@@ -25,7 +25,7 @@ class Camera {
 #ifdef __ANDROID__
     friend void eos(GstAppSink* sink, gpointer data);
 #elif defined(_WINDLL)
-    friend void eos(GstAppSink* sink, gpointer data);
+    friend GstFlowReturn newPreroll(GstAppSink *sink, gpointer data);
     friend class Core;
 #else // iOS
     friend class Core;
@@ -36,6 +36,10 @@ private:
     virtual ~Camera();
 
     static Camera* mThis;
+
+#ifdef _WINDLL
+    GstRegistry* mRegistry;
+#endif
 
     char* mCamBuffer; // Camera BMP buffer (BGR)
     boost::mutex mMutex;
