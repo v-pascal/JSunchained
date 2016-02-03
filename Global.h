@@ -69,7 +69,7 @@ extern jobject g_jResObj;
 #include <string>
 
 extern "C" {
-    typedef bool(__stdcall *StartCamCB)(unsigned char, short, short);
+    typedef void(__stdcall *StartCamCB)(unsigned char, short, short);
     typedef bool(__stdcall *StopCamCB)();
 }
 

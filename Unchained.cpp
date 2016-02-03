@@ -105,7 +105,19 @@ UNCHAINED_API void unchainedAccel(float x, float y, float z) {
 	//LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - x:%f; y:%f; z:%f"), __PRETTY_FUNCTION__, __LINE__, x, y, z);
 	unchainedCore->accel(x, y, z);
 }
-UNCHAINED_API void unchainedCamera(const unsigned char* data) { Camera::getInstance()->updateBuffer(data); }
+UNCHAINED_API void unchainedCamera(const unsigned char* data) {
+
+    //LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
+#ifdef _WINDLL
+    if (!data) {
+
+        LOGF(LOG_FORMAT(" - Failed to start camera"), __PRETTY_FUNCTION__, __LINE__);
+        assert(NULL); // Not implement yet // TODO: Stop camera from JavaScript library
+        return;
+    }
+#endif
+    Camera::getInstance()->updateBuffer(data);
+}
 
 #ifdef _WINDLL
 }

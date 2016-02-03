@@ -102,7 +102,9 @@ bool Camera::start(short width, short height) {
 #elif defined(_WINDLL)
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%p)"), __PRETTY_FUNCTION__, __LINE__, g_cbStartCam);
 
-    if (!g_cbStartCam(0, width, height)) {
+    g_cbStartCam(0, width, height);
+    if (0) { // Check operation result in 'unchainedCamera' function (parameter)
+
 #else // iOS
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
          mCamera, (mStarted)? "true":"false");
