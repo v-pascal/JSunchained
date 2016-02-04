@@ -14,11 +14,9 @@
 #elif __APPLE__
 #include "TargetConditionals.h"
 
-#if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_IOS)
-#define TARGET_OS_IOS
-#elif defined(TARGET_OS_MAC)
-#define TARGET_OS_MAC
-#else
+#ifdef TARGET_OS_X // Preprocessor definition for Mac OS X
+#undef TARGET_OS_IOS
+#elif !defined(TARGET_OS_IOS)
 #error "Unexpected target"
 #endif
 
