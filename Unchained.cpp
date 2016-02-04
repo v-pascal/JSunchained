@@ -1,13 +1,13 @@
 ﻿#include "Unchained.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
-#ifdef __ANDROID__
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
+#ifdef TARGET_OS_ANDROID
 #include <jni.h>
 #endif
 #include <Unchained/Log/Log.h>
 #include <Unchained/Core/Core.h>
 
-#else // iOS
+#else
 #include "Log.h"
 #include "Core.h"
 
@@ -16,12 +16,12 @@
 #endif
 
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 JavaVM* g_jVM = NULL;
 jclass g_jResClass = NULL;
 jobject g_jResObj = NULL;
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 StartCamCB g_cbStartCam = NULL;
 StopCamCB g_cbStopCam = NULL;
 
@@ -31,7 +31,7 @@ std::string* g_AppPath = NULL;
 
 Core* unchainedCore = NULL;
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 extern "C" {
 #endif
 
@@ -39,12 +39,12 @@ extern "C" {
 UNCHAINED_API void unchainedInit(const PlatformData* data) {
 
 	LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 	g_jVM = data->jvm;
 	g_jResClass = data->cls;
 	g_jResObj = data->res;
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
     g_cbStartCam = data->startCam;
     g_cbStopCam = data->stopCam;
 
@@ -58,7 +58,7 @@ UNCHAINED_API void unchainedInit(const PlatformData* data) {
 UNCHAINED_API const char* unchainedKey() { return unchainedCore->key(); }
 UNCHAINED_API bool unchainedReady() { return unchainedCore->isReady(); }
 UNCHAINED_API void unchainedPermission(short allowed) { unchainedCore->setPermission(allowed); }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 UNCHAINED_API unsigned char unchainedReset(const char* url) {
 
     LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url);
@@ -71,7 +71,7 @@ unsigned char unchainedReset(const std::string &url) {
 }
 
 ////// Activity
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 UNCHAINED_API unsigned char unchainedStart(const char* url, const char* version) {
 
     LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - u:%s; v:%s"), __PRETTY_FUNCTION__, __LINE__, url, version);
@@ -82,7 +82,7 @@ unsigned char unchainedStart(const std::string &url, const std::string &version)
 #endif
     return unchainedCore->start(url, version);
 }
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 void unchainedPause(bool finishing, bool lockScreen) { unchainedCore->pause(finishing, lockScreen); }
 void unchainedDestroy() {
 
@@ -108,7 +108,7 @@ UNCHAINED_API void unchainedAccel(float x, float y, float z) {
 UNCHAINED_API void unchainedCamera(const unsigned char* data) {
 
     //LOGV(UNCHAINED_LOG_MAIN, 0, LOG_FORMAT(" - d:%p"), __PRETTY_FUNCTION__, __LINE__, data);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     if (!data) {
 
         LOGF(LOG_FORMAT(" - Failed to start camera"), __PRETTY_FUNCTION__, __LINE__);
@@ -119,6 +119,6 @@ UNCHAINED_API void unchainedCamera(const unsigned char* data) {
     Camera::getInstance()->updateBuffer(data);
 }
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 }
 #endif

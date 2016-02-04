@@ -1,8 +1,8 @@
 #include "Tools.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
-#else // iOS
+#else
 #include "Log.h"
 #endif
 
@@ -11,7 +11,7 @@
 #include <sstream>
 
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 extern "C" JNIEnv* getJavaEnv(unsigned char logLevel, const char* function, int line) {
 
     JNIEnv* env = NULL;
@@ -173,9 +173,9 @@ extern std::string getCountry(unsigned char logLevel) {
     return country;
 }
 */
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 
-#else // iOS
+#else
 extern NSString* getCountry() { return [[NSLocale currentLocale] objectForKey:NSLocaleCountryCode]; }
 
 #endif
@@ -235,7 +235,7 @@ extern std::string encodeB64(const std::string& field) {
 
 //////
 /*
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 Launcher::Launcher(std::string package, std::string activity, std::string data) : mPackage(package),
         mActivity(activity), mData(data) {
 
@@ -283,7 +283,7 @@ bool Launcher::go() {
 #endif
 
 //////
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 extern bool alertMessage(unsigned char logLevel, const char* msg) {
 
     LOGV(logLevel, 0, LOG_FORMAT(" - m:%s (j:%p; a:%p)"), __PRETTY_FUNCTION__, __LINE__, msg, g_JavaVM, g_ActivityObject);

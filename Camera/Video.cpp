@@ -47,7 +47,7 @@ bool Video::reply(const void* data) {
     }
     mLength = MAX_RESPONSE_SIZE;
     checkIncBuffer();
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     sprintf_s(*mResponse, MAX_RESPONSE_SIZE, CAMERA_JSON, playing);
 #else
     sprintf(*mResponse, CAMERA_JSON, playing);

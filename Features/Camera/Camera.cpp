@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Tools/Tools.h>
 #include <Unchained/Log/Log.h>
 #include <Unchained/Storage/Storage.h>
@@ -8,7 +8,7 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 
-#else // iOS
+#else
 #include "Tools.h"
 #include "Log.h"
 #include "Storage.h"
@@ -21,9 +21,9 @@
 #include <iostream>
 #include <fstream>
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 #define BUFFER_SIZE_NV21        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 1.5f)
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 #define BUFFER_SIZE_RGBA        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 4)
 #else
 #define BUFFER_SIZE_ABGR        (CAM_WIDTH * CAM_HEIGHT * 4)
@@ -35,7 +35,7 @@ Camera* Camera::mThis = NULL;
 //////
 Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBufferLen(0) {
 
-#ifndef _WINDLL
+#ifndef TARGET_OS_WINDOWS
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
 #else
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (a:%p)"), __PRETTY_FUNCTION__, __LINE__, g_AppPath);
@@ -45,13 +45,13 @@ Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBu
     mLog = 0;
 #endif
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     gst_init(NULL, NULL);
 
     mRegistry = gst_registry_get();
     gst_registry_scan_path(mRegistry, g_AppPath->c_str());
 
-#elif !defined(__ANDROID__) // iOS
+#elif !defined(TARGET_OS_ANDROID)
     mCamera = [[NSCamera alloc] init];
     mCamera.camReady = [mCamera initCamera];
 
@@ -65,18 +65,18 @@ Camera::~Camera() {
     if (mCamBuffer)
         delete [] mCamBuffer;
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     gst_object_unref(mRegistry);
     gst_deinit();
 
-#elif !defined(__ANDROID__) // iOS
+#elif !defined(TARGET_OS_ANDROID)
     [mCamera release];
 #endif
 }
 
 bool Camera::start(short width, short height) {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, width,
             height, g_jVM, g_jResClass, g_jResObj);
     assert(g_jVM);
@@ -99,13 +99,13 @@ bool Camera::start(short width, short height) {
     mHeight = height;
 
     if (!env->CallBooleanMethod(g_jResObj, mthd, width, height)) {
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%p)"), __PRETTY_FUNCTION__, __LINE__, g_cbStartCam);
 
     g_cbStartCam(0, width, height);
     if (0) { // Check operation result in 'unchainedCamera' function (parameter)
 
-#else // iOS
+#else
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - w:%d; h:%d (c:%p; s:%s)"), __PRETTY_FUNCTION__, __LINE__, width, height,
          mCamera, (mStarted)? "true":"false");
     assert(mCamera);
@@ -128,7 +128,7 @@ bool Camera::start(short width, short height) {
     mStarted = true;
     return true;
 }
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 void Camera::pause(bool lockScreen) {
 
 #ifdef DEBUG
@@ -143,9 +143,9 @@ void Camera::pause() {
     if (!mStarted)
         return;
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 
-#elif !defined(__ANDROID__) // iOS
+#elif !defined(TARGET_OS_ANDROID)
     assert(!mPaused);
     mPaused = true;
 #endif
@@ -159,7 +159,7 @@ void Camera::pause() {
     }
     mMutex.unlock();
 }
-#ifndef __ANDROID__
+#ifndef TARGET_OS_ANDROID
 void Camera::resume() {
 
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%s; w:%d; h:%d)"), __PRETTY_FUNCTION__, __LINE__,
@@ -167,7 +167,7 @@ void Camera::resume() {
     if (!mStarted)
         return;
 
-#ifndef _WINDLL // iOS
+#ifndef TARGET_OS_WINDOWS
     assert(mPaused);
     mPaused = false;
 #else
@@ -178,7 +178,7 @@ void Camera::resume() {
 
 bool Camera::stop() {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);
@@ -198,7 +198,7 @@ bool Camera::stop() {
         return false;
     }
     if (!env->CallBooleanMethod(g_jResObj, mthd)) {
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
     LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - (s:%p)"), __PRETTY_FUNCTION__, __LINE__, g_cbStopCam);
 
     if (!g_cbStopCam) {
@@ -220,7 +220,7 @@ bool Camera::stop() {
     return true;
 }
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 void Camera::updateFrame(GstBuffer* jpeg) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - j:%p"), __PRETTY_FUNCTION__, __LINE__, jpeg);
@@ -243,12 +243,12 @@ typedef struct {
 void eos(GstAppSink* sink, gpointer data) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - a:%p; d:%p"), __PRETTY_FUNCTION__, __LINE__, sink, data);
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     static_cast<eosData*>(data)->obj->updateFrame(gst_sample_get_buffer(gst_app_sink_pull_sample(GST_APP_SINK(sink))));
 #endif
     g_main_loop_quit(static_cast<eosData*>(data)->loop);
 }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 GstFlowReturn newPreroll(GstAppSink *sink, gpointer data) {
 
     GstSample* sample = gst_app_sink_pull_preroll(sink);
@@ -285,9 +285,9 @@ void Camera::updateBuffer(const unsigned char* data) {
 
     g_object_set(G_OBJECT(appsrc), "caps",
             gst_caps_new_simple("video/x-raw",
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
                  "format", G_TYPE_STRING, "NV21",
-#else // Windows
+#else // TARGET_OS_WINDOWS
                  "format", G_TYPE_STRING, "RGBA",
 #endif
                  "width", G_TYPE_INT, CAM_WIDTH,
@@ -299,15 +299,15 @@ void Camera::updateBuffer(const unsigned char* data) {
     gst_element_link_many(appsrc, conv, jpegenc, appsink, NULL);
 
     GstBuffer* raw = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY, const_cast<unsigned char*>(data),
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
             BUFFER_SIZE_NV21, 0, BUFFER_SIZE_NV21, const_cast<unsigned char*>(data), NULL);
-#else // Windows
+#else // TARGET_OS_WINDOWS
             BUFFER_SIZE_RGBA, 0, BUFFER_SIZE_RGBA, const_cast<unsigned char*>(data), NULL);
 #endif
     gst_app_src_push_buffer(GST_APP_SRC(appsrc), raw);
     gst_app_src_end_of_stream(GST_APP_SRC(appsrc));
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     GstAppSinkCallbacks callbacks = { eos, newPreroll, newSample };
 #else
     GstAppSinkCallbacks callbacks = { eos, NULL, NULL };

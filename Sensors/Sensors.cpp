@@ -1,8 +1,8 @@
 #include "Sensors.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
-#else // iOS
+#else
 #include "Log.h"
 #endif
 
@@ -22,7 +22,7 @@ Sensors::Sensors(char** response) : Reply(response) {
     LOGV(UNCHAINED_LOG_SENSORS, 0, LOG_FORMAT(" - r:%p"), __PRETTY_FUNCTION__, __LINE__, response);
     memset(&mAccel, 0, sizeof(Coordinates));
 
-#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
+#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
     mMotion = [[NSMotion alloc] init];
 #endif
 }
@@ -35,7 +35,7 @@ bool Sensors::reply(const void* data) {
     switch (*static_cast<const unsigned char*>(data)) {
 
         case TYPE_ACCEL: {
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             sprintf_s(*mResponse, MAX_RESPONSE_SIZE, ACCEL_JSON, mAccel.x, mAccel.y, mAccel.z);
 #else
             sprintf(*mResponse, ACCEL_JSON, mAccel.x, mAccel.y, mAccel.z);

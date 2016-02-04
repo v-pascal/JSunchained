@@ -1,6 +1,8 @@
 #ifndef UNCHAINED_BLUETOOTH_H_
 #define UNCHAINED_BLUETOOTH_H_
 
+#include <Unchained/Global.h>
+
 #include <boost/thread.hpp>
 #include <string>
 

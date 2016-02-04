@@ -1,8 +1,8 @@
 #include "Storage.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
-#else // iOS
+#else
 #include "Log.h"
 #endif
 #include <boost/filesystem.hpp>
@@ -29,7 +29,7 @@ std::string Storage::getFolder(unsigned char type) {
     LOGV(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(" - t:%d"), __PRETTY_FUNCTION__, __LINE__, type);
     std::string folder; // Error (empty)
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGI(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert((type == FOLDER_TYPE_PICTURES) || (type == FOLDER_TYPE_MOVIES) || (type == FOLDER_TYPE_APPLICATION));
@@ -67,7 +67,7 @@ std::string Storage::getFolder(unsigned char type) {
     }
 #endif
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 
 
 #else
@@ -106,7 +106,7 @@ std::string Storage::getFolder(unsigned char type) {
 void Storage::init() {
 
     LOGV(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     using namespace boost::filesystem;
     path picDir(getFolder(FOLDER_TYPE_PICTURES));
     directory_iterator end;
@@ -114,7 +114,7 @@ void Storage::init() {
         if ((is_regular_file(dir->status())) && ((!dir->path().extension().compare(".jpg")) ||
                 (!dir->path().extension().compare(".JPG"))))
             mPictures.push_back(new std::string(dir->path().generic_string()));
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 
 #else
     NSLog(@"WARNING: Storage not managed yet!");
@@ -125,7 +125,7 @@ void Storage::init() {
 bool Storage::defaultReply() {
 
     LOGV(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGI(UNCHAINED_LOG_STORAGE, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);

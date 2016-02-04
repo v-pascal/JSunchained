@@ -16,7 +16,7 @@ Permission::Permission(char** response) : Reply(response) {
 
     mWaiting = false;
     
-#ifndef __ANDROID__
+#ifndef TARGET_OS_ANDROID
     mAlertDlg = nil;
 #endif
 #endif
@@ -29,7 +29,7 @@ Permission::~Permission() {
         delete (*iter);
     mPermURL.clear();
 
-#ifndef __ANDROID__
+#ifndef TARGET_OS_ANDROID
     if (mAlertDlg != nil)
         [mAlertDlg release];
 #endif
@@ -39,7 +39,7 @@ Permission::~Permission() {
 bool Permission::allowPermission() {
 
 #ifndef UNCHAINED_COMPONENT
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_PERMISSION, 0, LOG_FORMAT(" - (u:%s; j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__,
             mURL.substr(sizeof(HTTP_REPLY_HEAD) - 1).c_str(), g_jVM, g_jResClass, g_jResObj);
     assert(g_jVM);
@@ -108,7 +108,7 @@ bool Permission::reply(const void* data) {
     mLength = static_cast<int>(strlen(*mResponse));
 
 #else
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     sprintf_s(*mResponse, MAX_RESPONSE_SIZE, PERM_JSON, 1, PERMISSION_MASK_ALL);
 #else
     sprintf(*mResponse, PERM_JSON, 1, PERMISSION_MASK_ALL);

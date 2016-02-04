@@ -1,10 +1,10 @@
 #include "Core.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
 
-#else // iOS
+#else
 #include "Log.h"
 #include "Tools.h"
 
@@ -58,7 +58,7 @@ void Core::setHead(const std::string &url) {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(" - u:%s"), __PRETTY_FUNCTION__, __LINE__, url.c_str());
     mHead = HTTP_REPLY_HEAD;
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     mHead.append(url);
 #else
     size_t pos = url.find('/', sizeof("http://"));
@@ -76,7 +76,7 @@ const char* Core::key() {
     mKey = numToHex<int>(random);
 
     time_t now = time(NULL) - (5 * 24 * 60 * 60);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     struct tm* date = NULL;
     gmtime_s(date, &now);
 #else
@@ -153,7 +153,7 @@ unsigned char Core::start(const std::string &url, const std::string &version) {
     mThread = new boost::thread(startCoreThread, this);
     return ERR_ID_NONE;
 }
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 void Core::pause(bool finishing, bool lockScreen) {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(" - f:%s; l:%s"), __PRETTY_FUNCTION__, __LINE__, (finishing)? "true":"false",
@@ -165,7 +165,7 @@ void Core::pause(bool finishing, bool lockScreen) {
 void Core::resume() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifndef _WINDLL // iOS
+#ifndef TARGET_OS_WINDOWS
     [mSensors.mMotion resume];
 #endif
     Camera::getInstance()->resume();
@@ -173,7 +173,7 @@ void Core::resume() {
 void Core::pause() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifndef _WINDLL // iOS
+#ifndef TARGET_OS_WINDOWS
     [mSensors.mMotion pause];
 #endif
     Camera::getInstance()->pause();
@@ -182,7 +182,7 @@ void Core::pause() {
 void Core::stop() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
+#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
     [mSensors.mMotion stop];
 #endif
     mClose = true;
@@ -291,7 +291,7 @@ void Core::coreThreadRunning() {
             if (rcvLen < 0) {
 
                 bool quit = false;
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
                 int err = WSAGetLastError();
                 switch (err) {
                     case WSAEWOULDBLOCK: {
@@ -467,7 +467,7 @@ void Core::coreThreadRunning() {
     if ((!mClose) && (mSocket->getClientCount()))
         exit();
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     detachThreadJVM(UNCHAINED_LOG_CORE);
 #endif
     LOGI(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(" - Finished"), __PRETTY_FUNCTION__, __LINE__);

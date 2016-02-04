@@ -2,7 +2,9 @@
 #define UNCHAINED_TOOLS_H_
 #if defined(__cplusplus)
 
-#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
+#include <Unchained/Global.h>
+
+#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
 #import <Foundation/Foundation.h>
 #endif
 
@@ -23,7 +25,7 @@
 static const float UNCHAINED_PI = 3.14159265358979f;
 
 //////
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 inline bool fequal(float a, float b) { return (fabs(a - b) <= (FLT_EPSILON * fmax(fabs(a), fabs(b)))); }
 #else
 inline bool fequal(float a, float b) { return (fabs(a - b) <= (FLT_EPSILON * std::max<float>(fabs(a), fabs(b)))); }
@@ -36,7 +38,7 @@ inline T delta(T lastVal, T newVal) {
     if ((newVal < 0) && (lastVal > 0)) {
         return (newVal - std::numeric_limits<T>::min()) + (std::numeric_limits<T>::max() - lastVal);
     }
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     return std::abs<T>(newVal - lastVal);
 #else
     T res = newVal - lastVal;
@@ -85,7 +87,7 @@ inline std::string numToHex(T number) {
 };
 
 //////
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 #include <jni.h>
 
 extern "C" JNIEnv* getJavaEnv(unsigned char logLevel, const char* function, int line);
@@ -97,7 +99,7 @@ extern "C" jbyte* wstring2byteArray(const std::wstring& wString);
 #endif
 
 //////
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 /*
 #define UNCHAINED_UID_ERROR        "#UID-ERROR#"
 #define UNCHAINED_COUNTRY_ERROR    "#CTR-ERROR#"
@@ -112,10 +114,10 @@ extern std::string getUID(UID::Type type, unsigned char logLevel);
 extern std::string getCountry(unsigned char logLevel); // // ISO 3166-1 alpha-3
 */
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 
 
-#else // iOS
+#else
 extern NSString* getCountry(); // // ISO 3166-1 alpha-2
 
 #endif
@@ -125,7 +127,7 @@ extern std::string encodeURL(const std::string& url);
 extern std::string encodeB64(const std::string& field);
 
 //////
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 /*
 class Launcher {
 
@@ -148,7 +150,7 @@ public:
 
 //////
 /*
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 extern "C" bool alertMessage(unsigned char logLevel, const char* msg);
 #else
 extern "C" bool alertMessage(unsigned char logLevel, double duration, const char* msg);

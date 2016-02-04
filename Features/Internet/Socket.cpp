@@ -1,16 +1,16 @@
 #include "Socket.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
 
-#else // iOS
+#else
 #include "Log.h"
 #include "Tools.h"
 
 #endif
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 #include <ws2tcpip.h>
 
 #else
@@ -22,7 +22,7 @@
 
 #endif
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 #undef UNCHAINED_NO_DATA
 #define UNCHAINED_NO_DATA       INVALID_SOCKET
 #endif
@@ -47,7 +47,7 @@ bool Socket::open() {
     LOGV(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - (s:%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
     assert(mSocket == UNCHAINED_NO_DATA);
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     mSocket = WSAStartup(MAKEWORD(2, 2), &mWSAD);
     if (mSocket != 0) {
 
@@ -57,19 +57,19 @@ bool Socket::open() {
     }
 #endif
     mSocket = socket(AF_INET, SOCK_STREAM, 0);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     if (mSocket == INVALID_SOCKET) {
 #else
     if (mSocket < 0) {
 #endif
         LOGE(LOG_FORMAT(" - Failed to open socket (%d)"), __PRETTY_FUNCTION__, __LINE__, mSocket);
         mSocket = UNCHAINED_NO_DATA;
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
         WSACleanup();
 #endif
         return false;
     }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     u_long blockMode = 0;
     if (mServer)
         blockMode = 1; // Non-blocking
@@ -94,14 +94,14 @@ void Socket::shutdown() {
         mThread = NULL;
     }
     for (std::vector<int>::iterator iter = mClients.begin(); iter != mClients.end(); ++iter)
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
         closesocket(*iter);
 #else
         close(*iter);
 #endif
     mClients.clear();
 
-#ifndef _WINDLL
+#ifndef TARGET_OS_WINDOWS
     if (!(mSocket < 0))
         close(mSocket);
 #else
@@ -115,7 +115,7 @@ void Socket::shutdown() {
 
 int Socket::receive(char* buffer, size_t max, unsigned char clientIdx) const {
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     if (mSocket == INVALID_SOCKET) {
 #else
     if (mSocket < 0) {
@@ -126,7 +126,7 @@ int Socket::receive(char* buffer, size_t max, unsigned char clientIdx) const {
     }
     assert((!mServer) || ((mServer) && (mClients.size() > clientIdx)));
     int socket = (!mServer)? mSocket:mClients[clientIdx];
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     return recv(socket, buffer, max, 0);
 #else
     return static_cast<int>(read(socket, buffer, max));
@@ -136,7 +136,7 @@ int Socket::Send(const char* buffer, size_t len, unsigned char clientIdx) const 
 
     LOGV(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - b:%p; s:%d; i:%d (s:%s; l:%d)"), __PRETTY_FUNCTION__, __LINE__, buffer,
             static_cast<int>(len), clientIdx, (mServer)? "true":"false", static_cast<int>(mClients.size()));
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     if (mSocket == INVALID_SOCKET) {
 #else
     if (mSocket < 0) {
@@ -147,7 +147,7 @@ int Socket::Send(const char* buffer, size_t len, unsigned char clientIdx) const 
     }
     assert((!mServer) || ((mServer) && (mClients.size() > clientIdx)));
     int socket = (!mServer)? mSocket:mClients[clientIdx];
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     return send(socket, buffer, static_cast<int>(len), 0);
 #else
     return static_cast<int>(write(socket, buffer, len));
@@ -166,9 +166,9 @@ bool Socket::connexion(const std::string &host, int port) {
     // Method #1
     struct in_addr ipAddr;
     inet_pton(AF_INET, host.c_str(), &ipAddr);
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
     struct hostent* server = gethostbyaddr((const char*)&ipAddr, sizeof(ipAddr), AF_INET);
-#else // iOS
+#else
     struct hostent* server = gethostbyaddr(&ipAddr, sizeof(ipAddr), AF_INET);
 #endif
     if (!server) {
@@ -191,7 +191,7 @@ bool Socket::connexion(const std::string &host, int port) {
 
             LOGW(LOG_FORMAT(" - Failed to connect #1: %s:%d (%d)"), __PRETTY_FUNCTION__, __LINE__, host.c_str(), port,
                  static_cast<int>(errno));
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             WSACleanup();
 #endif
         }
@@ -199,7 +199,7 @@ bool Socket::connexion(const std::string &host, int port) {
 
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #1: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             u_long nonBlock = 1;
             ioctlsocket(mSocket, FIONBIO, &nonBlock);
 #else
@@ -208,7 +208,7 @@ bool Socket::connexion(const std::string &host, int port) {
             return true; // Connected
         }
     }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     closesocket(mSocket);
     WSACleanup();
 #else
@@ -226,7 +226,7 @@ bool Socket::connexion(const std::string &host, int port) {
     if (gaiRes != 0) {
 
         LOGW(LOG_FORMAT(" - Failed to get address info: %s"), __PRETTY_FUNCTION__, __LINE__, gai_strerror(gaiRes));
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
         WSACleanup();
 #endif
         return false;
@@ -235,14 +235,14 @@ bool Socket::connexion(const std::string &host, int port) {
         if (!open()) {
 
             freeaddrinfo(result);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             WSACleanup();
 #endif
             return false;
         }
         if (connect(mSocket, walk->ai_addr, walk->ai_addrlen) < 0) {
             LOGW(LOG_FORMAT(" - Connexion failed (err: %d)"), __PRETTY_FUNCTION__, __LINE__, static_cast<int>(errno));
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             WSACleanup();
 #endif
         }
@@ -250,7 +250,7 @@ bool Socket::connexion(const std::string &host, int port) {
 
             LOGI(UNCHAINED_LOG_INTERNET, 0, LOG_FORMAT(" - Connected #2: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(),
                  port);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
             u_long nonBlock = 1;
             ioctlsocket(mSocket, FIONBIO, &nonBlock);
 #else
@@ -262,7 +262,7 @@ bool Socket::connexion(const std::string &host, int port) {
     }
     LOGW(LOG_FORMAT(" - Failed to connect #2: %s:%d"), __PRETTY_FUNCTION__, __LINE__, host.c_str(), port);
     freeaddrinfo(result);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     closesocket(mSocket);
     WSACleanup();
 #else
@@ -283,7 +283,7 @@ bool Socket::start(int port) {
         assert(NULL);
         return false;
     }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     if (mSocket == INVALID_SOCKET) {
 #else
     if (mSocket < 0) {
@@ -329,7 +329,7 @@ void Socket::closeClient(unsigned char clientIdx) {
 
     mMutex.lock();
     std::vector<int>::iterator iter = (mClients.begin() + clientIdx); // Index still good even if just added one
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     closesocket(*iter);
     WSACleanup();
 #else
@@ -349,7 +349,7 @@ void Socket::serverThreadRunning() {
         struct sockaddr_in cli_addr;
         socklen_t clilen = sizeof(cli_addr);
         int newSocket = accept(mSocket, (struct sockaddr*)&cli_addr, &clilen);
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
         if (newSocket == INVALID_SOCKET) {
 
             int err = WSAGetLastError();
@@ -378,7 +378,7 @@ void Socket::serverThreadRunning() {
             }
             continue;
         }
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
         u_long nonBlock = 1;
         ioctlsocket(newSocket, FIONBIO, &nonBlock);
 #else

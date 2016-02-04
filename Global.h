@@ -7,7 +7,28 @@
 #define UNCHAINED_NO_DATA           -1
 #define UNCHAINED_NULL_STRING       " "
 
-#ifdef __ANDROID__
+#if defined(_WIN32) || defined(_WIN64)
+#define TARGET_OS_WINDOWS // Universal Windows Platform
+#elif defined(__ANDROID__)
+#define TARGET_OS_ANDROID
+#elif __APPLE__
+#include "TargetConditionals.h"
+
+#if defined(TARGET_OS_IPHONE) || defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_IOS)
+#define TARGET_OS_IOS
+#elif defined(TARGET_OS_MAC)
+#define TARGET_OS_MAC
+#else
+#error "Unexpected target"
+#endif
+
+#elif defined(__linux__) || defined(__unix__)
+#error "Not implemented yet"
+#else
+#error "Unexpected target"
+#endif
+
+#ifdef TARGET_OS_ANDROID
 ////// DEBUG | RELEASE
 
 // Debug
@@ -30,7 +51,7 @@
 // * android:debuggable="false | true" in the manifest file does not work as well
 // * NDK_DEBUG=0 | 1 definition has no effect
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 #ifdef _DEBUG
 #define DEBUG
 #endif
@@ -58,14 +79,14 @@ enum {
 
 };
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 #include <jni.h>
 
 extern JavaVM* g_jVM;
 extern jclass g_jResClass;
 extern jobject g_jResObj;
 
-#elif _WINDLL
+#elif defined(TARGET_OS_WINDOWS)
 #include <string>
 
 extern "C" {

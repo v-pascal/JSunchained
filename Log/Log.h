@@ -2,7 +2,7 @@
 #define UNCHAINED_LOG_H_
 
 #include <Unchained/Global.h>
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
 #define __PRETTY_FUNCTION__                 __FUNCSIG__
 #define LOG_FORMAT(param)                   "%s (%s): %s[%d]" param "\n"
 #else
@@ -28,7 +28,7 @@ typedef enum {
 
 // mod: Modulo of value that increase to avoid too many logs: !(value % n) -> log
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
 #include <android/log.h>
 
 #ifdef DEBUG
@@ -58,7 +58,7 @@ typedef enum {
 #define LOGE(format, ...)                   __android_log_print(ANDROID_LOG_ERROR, "JSunchained", format, __VA_ARGS__);
 #define LOGF(format, ...)                   __android_log_print(ANDROID_LOG_FATAL, "JSunchained", format, __VA_ARGS__);
 
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
 #include <stdio.h>
 #include <windows.h>
 
@@ -109,7 +109,7 @@ typedef enum {
                                               sprintf_s(log, MAX_LOG_SIZE, format, "FATAL", "JSunchained", __VA_ARGS__); \
                                               OutputDebugStringA(log); }
 
-#else // iOS
+#else
 
 #ifdef DEBUG
 extern "C" {
@@ -140,6 +140,6 @@ void LOGF(const char* format, ...);
 
 } // extern "C"
 
-#endif // __ANDROID__
+#endif
 
 #endif // UNCHAINED_LOG_H_

@@ -1,10 +1,12 @@
 #ifndef UNCHAINED_SENSORS_H_
 #define UNCHAINED_SENSORS_H_
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#include <Unchained/Global.h>
+
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Core/Reply.h>
 
-#else // iOS
+#else
 #import "NSResources.h"
 #include "Reply.h"
 
@@ -31,7 +33,7 @@ public:
         TYPE_ACCEL = 0
     };
     
-#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
+#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
     NSMotion* mMotion;
 #endif
 

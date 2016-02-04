@@ -1,9 +1,11 @@
 #ifndef UNCHAINED_STORAGE_H_
 #define UNCHAINED_STORAGE_H_
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#include <Unchained/Global.h>
+
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Core/Reply.h>
-#else // iOS
+#else
 #include "Reply.h"
 #endif
 #include <vector>
@@ -27,7 +29,7 @@ public:
 
         FOLDER_TYPE_PICTURES = 0,
         FOLDER_TYPE_MOVIES,
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
         FOLDER_TYPE_APPLICATION
 #else
         FOLDER_TYPE_DOCUMENTS

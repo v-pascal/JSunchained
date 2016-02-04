@@ -1,9 +1,11 @@
 #ifndef UNCHAINED_DISCOVER_H_
 #define UNCHAINED_DISCOVER_H_
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#include <Unchained/Global.h>
+
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Core/Reply.h>
-#else // iOS
+#else
 #include "Reply.h"
 #endif
 

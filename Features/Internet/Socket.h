@@ -3,7 +3,8 @@
 #if defined(__cplusplus)
 
 #include <Unchained/Global.h>
-#ifdef _WINDLL
+
+#ifdef TARGET_OS_WINDOWS
 #include <winsock2.h>
 #endif
 
@@ -19,7 +20,7 @@ private:
     bool mServer;
     int mSocket;
     std::vector<int> mClients;
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     WSADATA mWSAD;
 #endif
 

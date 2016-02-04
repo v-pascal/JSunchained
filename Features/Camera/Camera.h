@@ -1,16 +1,14 @@
 #ifndef UNCHAINED_CAMERA_H_
 #define UNCHAINED_CAMERA_H_
 
-#ifdef _WINDLL
-#include <Unchained\Global.h>
-#endif
-#include <boost/thread.hpp>
+#include <Unchained/Global.h>
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <gst/app/gstappsink.h>
-#else // iOS
+#else
 #import "NSResources.h"
 #endif
+#include <boost/thread.hpp>
 
 #define CAM_WIDTH           640
 #define CAM_HEIGHT          480
@@ -22,12 +20,12 @@ class Core;
 //////
 class Camera {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     friend void eos(GstAppSink* sink, gpointer data);
-#elif defined(_WINDLL)
+#elif defined(TARGET_OS_WINDOWS)
     friend GstFlowReturn newPreroll(GstAppSink *sink, gpointer data);
     friend class Core;
-#else // iOS
+#else
     friend class Core;
 #endif
 
@@ -37,7 +35,7 @@ private:
 
     static Camera* mThis;
 
-#ifdef _WINDLL
+#ifdef TARGET_OS_WINDOWS
     GstRegistry* mRegistry;
 #endif
 
@@ -45,7 +43,7 @@ private:
     boost::mutex mMutex;
 
     bool mStarted;
-#if !defined(__ANDROID__) && !defined(_WINDLL) // iOS
+#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
     NSCamera* mCamera;
     bool mPaused; // iOS only coz on Android the stop camera is managed B4 'pause' method call
 #endif
@@ -56,7 +54,7 @@ private:
     short mHeight;
     unsigned int mBufferLen;
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
     void updateFrame(GstBuffer* jpeg);
 #endif
 
@@ -86,7 +84,7 @@ public:
     //////
     bool start(short width, short height);
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     void pause(bool lockScreen);
     // WARNING: Do not use this method (reserved)
 #else

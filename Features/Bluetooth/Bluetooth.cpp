@@ -1,10 +1,10 @@
 #include "Bluetooth.h"
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Log/Log.h>
 #include <Unchained/Tools/Tools.h>
 
-#else // iOS
+#else
 #include "Log.h"
 #include "Tools.h"
 
@@ -14,7 +14,7 @@
 //////
 bool Bluetooth::isEnabled() {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_BLUETOOTH, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);
@@ -50,7 +50,7 @@ bool Bluetooth::isEnabled() {
 
 bool Bluetooth::discover() {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_BLUETOOTH, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);
@@ -81,7 +81,7 @@ bool Bluetooth::discover() {
 }
 bool Bluetooth::isDiscovering() {
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGV(UNCHAINED_LOG_BLUETOOTH, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);
@@ -115,7 +115,7 @@ std::string Bluetooth::getDevice(unsigned char index) {
     LOGV(UNCHAINED_LOG_BLUETOOTH, 0, LOG_FORMAT(" - i:%d"), __PRETTY_FUNCTION__, __LINE__, index);
     std::string device; // Error
 
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     LOGI(UNCHAINED_LOG_BLUETOOTH, 0, LOG_FORMAT(" - (j:%p; c:%p; o:%p)"), __PRETTY_FUNCTION__, __LINE__, g_jVM, g_jResClass,
             g_jResObj);
     assert(g_jVM);

@@ -1,14 +1,16 @@
 #ifndef UNCHAINED_CORE_H_
 #define UNCHAINED_CORE_H_
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#include <Unchained/Global.h>
+
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Features/Internet/Socket.h>
 #include <Unchained/Sensors/Sensors.h>
 #include <Unchained/Storage/Storage.h>
 #include <Unchained/Bluetooth/Discover.h>
 #include <Unchained/Camera/Video.h>
 
-#else // iOS
+#else
 #include "Socket.h"
 #include "Sensors.h"
 #include "Storage.h"
@@ -105,7 +107,7 @@ public:
 
     ////// Activity
     unsigned char start(const std::string &url, const std::string &version);
-#ifdef __ANDROID__
+#ifdef TARGET_OS_ANDROID
     void pause(bool finishing, bool lockScreen);
 #else
     void resume();

@@ -1,11 +1,13 @@
 #ifndef UNCHAINED_VIDEO_H_
 #define UNCHAINED_VIDEO_H_
 
-#if defined(__ANDROID__) || defined(_WINDLL)
+#include <Unchained/Global.h>
+
+#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
 #include <Unchained/Core/Reply.h>
 #include <Unchained/Features/Camera/Camera.h>
 
-#else // iOS
+#else
 #include "Reply.h"
 #include "Camera.h"
 
