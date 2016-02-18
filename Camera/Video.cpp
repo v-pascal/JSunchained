@@ -34,16 +34,6 @@ bool Video::reply(const void* data) {
             *mResponse = const_cast<char*>(mCamera->getBuffer());
             return true;
         }
-#ifdef DEBUG
-        default: {
-
-            LOGE(LOG_FORMAT(" - Unexpected camera request: %d"), __PRETTY_FUNCTION__, __LINE__,
-                    *static_cast<const unsigned char*>(data));
-            assert(NULL);
-            playing = '0';
-            return false;
-        }
-#endif
     }
     mLength = MAX_RESPONSE_SIZE;
     checkIncBuffer();
