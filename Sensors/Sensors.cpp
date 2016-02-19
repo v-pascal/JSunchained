@@ -43,15 +43,13 @@ bool Sensors::reply(const void* data) {
             mLength = static_cast<int>(strlen(*mResponse));
             break;
         }
-#ifdef DEBUG
         default: {
 
-            LOGE(LOG_FORMAT(" - Unexpected sensor type: %d"), __PRETTY_FUNCTION__, __LINE__,
+            LOGF(LOG_FORMAT(" - Unexpected sensor type: %d"), __PRETTY_FUNCTION__, __LINE__,
                     *static_cast<const unsigned char*>(data));
             assert(NULL);
             return false;
         }
-#endif
     }
     return true;
 }
