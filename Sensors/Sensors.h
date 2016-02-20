@@ -32,8 +32,8 @@ public:
     enum {
         TYPE_ACCEL = 0
     };
-    
-#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
+
+#ifdef TARGET_OS_IOS
     NSMotion* mMotion;
 #endif
 

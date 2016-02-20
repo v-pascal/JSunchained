@@ -13,8 +13,15 @@
 #include "Log.h"
 #include "Storage.h"
 
+#ifdef TARGET_OS_IOS
 #include <libGST/libGST.h>
 #include <libGST/defLibGST.h>
+
+#else // Mac
+#include <gst/gst.h>
+#include <gst/app/gstappsrc.h>
+
+#endif
 
 #endif
 #include <assert.h>
@@ -25,7 +32,7 @@
 #define BUFFER_SIZE_NV21        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 1.5f)
 #elif defined(TARGET_OS_WINDOWS)
 #define BUFFER_SIZE_RGBA        static_cast<unsigned int>(CAM_WIDTH * CAM_HEIGHT * 4)
-#else
+#else // Apple
 #define BUFFER_SIZE_ABGR        (CAM_WIDTH * CAM_HEIGHT * 4)
 #endif
 
@@ -51,11 +58,16 @@ Camera::Camera() : mStarted(false), mWidth(0), mHeight(0), mCamBuffer(NULL), mBu
     mRegistry = gst_registry_get();
     gst_registry_scan_path(mRegistry, g_AppPath->c_str());
 
-#elif !defined(TARGET_OS_ANDROID)
+#elif !defined(TARGET_OS_ANDROID) // Apple
     mCamera = [[NSCamera alloc] init];
     mCamera.camReady = [mCamera initCamera];
 
     mPaused = false;
+    
+#ifdef TARGET_OS_X
+    gst_init(NULL, NULL);
+#endif
+
 #endif
 }
 Camera::~Camera() {
@@ -69,7 +81,7 @@ Camera::~Camera() {
     gst_object_unref(mRegistry);
     gst_deinit();
 
-#elif !defined(TARGET_OS_ANDROID)
+#elif !defined(TARGET_OS_ANDROID) // Apple
     [mCamera release];
 #endif
 }
@@ -220,7 +232,7 @@ bool Camera::stop() {
     return true;
 }
 
-#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
+#ifndef TARGET_OS_IOS
 void Camera::updateFrame(GstBuffer* jpeg) {
 
     //LOGV(UNCHAINED_LOG_CAMERA, 0, LOG_FORMAT(" - j:%p"), __PRETTY_FUNCTION__, __LINE__, jpeg);
@@ -248,7 +260,7 @@ void eos(GstAppSink* sink, gpointer data) {
 #endif
     g_main_loop_quit(static_cast<eosData*>(data)->loop);
 }
-#ifdef TARGET_OS_WINDOWS
+#ifndef TARGET_OS_ANDROID
 GstFlowReturn newPreroll(GstAppSink *sink, gpointer data) {
 
     GstSample* sample = gst_app_sink_pull_preroll(sink);
@@ -287,8 +299,10 @@ void Camera::updateBuffer(const unsigned char* data) {
             gst_caps_new_simple("video/x-raw",
 #ifdef TARGET_OS_ANDROID
                  "format", G_TYPE_STRING, "NV21",
-#else // TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
                  "format", G_TYPE_STRING, "RGBA",
+#else // Mac
+                 "format", G_TYPE_STRING, "BGRA",
 #endif
                  "width", G_TYPE_INT, CAM_WIDTH,
                  "height", G_TYPE_INT, CAM_HEIGHT,
@@ -301,13 +315,15 @@ void Camera::updateBuffer(const unsigned char* data) {
     GstBuffer* raw = gst_buffer_new_wrapped_full(GST_MEMORY_FLAG_READONLY, const_cast<unsigned char*>(data),
 #ifdef TARGET_OS_ANDROID
             BUFFER_SIZE_NV21, 0, BUFFER_SIZE_NV21, const_cast<unsigned char*>(data), NULL);
-#else // TARGET_OS_WINDOWS
+#elif defined(TARGET_OS_WINDOWS)
             BUFFER_SIZE_RGBA, 0, BUFFER_SIZE_RGBA, const_cast<unsigned char*>(data), NULL);
+#else // Mac
+            BUFFER_SIZE_ABGR, 0, BUFFER_SIZE_ABGR, const_cast<unsigned char*>(data), NULL);
 #endif
     gst_app_src_push_buffer(GST_APP_SRC(appsrc), raw);
     gst_app_src_end_of_stream(GST_APP_SRC(appsrc));
 
-#ifdef TARGET_OS_WINDOWS
+#ifndef TARGET_OS_ANDROID
     GstAppSinkCallbacks callbacks = { eos, newPreroll, newSample };
 #else
     GstAppSinkCallbacks callbacks = { eos, NULL, NULL };
@@ -323,7 +339,7 @@ void Camera::updateBuffer(const unsigned char* data) {
     g_main_loop_unref(loop);
 }
 
-#else
+#else // iOS
 void Camera::updateBuffer(const unsigned char* data) {
 
 #ifdef DEBUG

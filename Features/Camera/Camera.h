@@ -3,10 +3,16 @@
 
 #include <Unchained/Global.h>
 
-#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
-#include <gst/app/gstappsink.h>
-#else
+#ifdef TARGET_OS_IOS
 #import "NSResources.h"
+
+#else
+#include <gst/app/gstappsink.h>
+
+#ifdef TARGET_OS_X
+#import "NSResources.h"
+#endif
+
 #endif
 #include <boost/thread.hpp>
 
@@ -22,10 +28,10 @@ class Camera {
 
 #ifdef TARGET_OS_ANDROID
     friend void eos(GstAppSink* sink, gpointer data);
-#elif defined(TARGET_OS_WINDOWS)
-    friend GstFlowReturn newPreroll(GstAppSink *sink, gpointer data);
+#elif defined(TARGET_OS_IOS)
     friend class Core;
 #else
+    friend GstFlowReturn newPreroll(GstAppSink *sink, gpointer data);
     friend class Core;
 #endif
 
@@ -54,7 +60,7 @@ private:
     short mHeight;
     unsigned int mBufferLen;
 
-#if defined(TARGET_OS_ANDROID) || defined(TARGET_OS_WINDOWS)
+#ifndef TARGET_OS_IOS
     void updateFrame(GstBuffer* jpeg);
 #endif
 

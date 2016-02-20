@@ -161,11 +161,11 @@ void Core::pause(bool finishing, bool lockScreen) {
     if (!finishing)
         Camera::getInstance()->pause(lockScreen);
 }
-#else
+#else // !Android
 void Core::resume() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifndef TARGET_OS_WINDOWS
+#ifdef TARGET_OS_IOS
     [mSensors.mMotion resume];
 #endif
     Camera::getInstance()->resume();
@@ -173,7 +173,7 @@ void Core::resume() {
 void Core::pause() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#ifndef TARGET_OS_WINDOWS
+#ifdef TARGET_OS_IOS
     [mSensors.mMotion pause];
 #endif
     Camera::getInstance()->pause();
@@ -182,7 +182,7 @@ void Core::pause() {
 void Core::stop() {
 
     LOGV(UNCHAINED_LOG_CORE, 0, LOG_FORMAT(), __PRETTY_FUNCTION__, __LINE__);
-#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
+#ifdef TARGET_OS_IOS
     [mSensors.mMotion stop];
 #endif
     mClose = true;

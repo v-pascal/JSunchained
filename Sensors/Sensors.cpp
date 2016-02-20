@@ -22,7 +22,7 @@ Sensors::Sensors(char** response) : Reply(response) {
     LOGV(UNCHAINED_LOG_SENSORS, 0, LOG_FORMAT(" - r:%p"), __PRETTY_FUNCTION__, __LINE__, response);
     memset(&mAccel, 0, sizeof(Coordinates));
 
-#if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
+#ifdef TARGET_OS_IOS
     mMotion = [[NSMotion alloc] init];
 #endif
 }

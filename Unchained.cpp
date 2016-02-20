@@ -11,7 +11,9 @@
 #include "Log.h"
 #include "Core.h"
 
+#ifdef TARGET_OS_IOS
 #import <libGST/libGST.h>
+#endif
 
 #endif
 
@@ -50,7 +52,7 @@ UNCHAINED_API void unchainedInit(const PlatformData* data) {
 
     g_AppPath = new std::string(data->appPath);
 
-#else
+#elif defined(TARGET_OS_IOS)
 	lib_gst_init();
 #endif
 	unchainedCore = Core::getInstance();
