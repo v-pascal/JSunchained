@@ -3,16 +3,10 @@
 
 #include <Unchained/Global.h>
 
-#ifdef TARGET_OS_IOS
+#if defined(TARGET_OS_IOS) || defined(TARGET_OS_X)
 #import "NSResources.h"
-
 #else
 #include <gst/app/gstappsink.h>
-
-#ifdef TARGET_OS_X
-#import "NSResources.h"
-#endif
-
 #endif
 #include <boost/thread.hpp>
 
@@ -25,29 +19,29 @@ class Core;
 
 //////
 class Camera {
-
+    
 #ifdef TARGET_OS_ANDROID
     friend void eos(GstAppSink* sink, gpointer data);
-#elif defined(TARGET_OS_IOS)
+#elif defined(TARGET_OS_IOS) || defined(TARGET_OS_X)
     friend class Core;
-#else
+#else // Windows
     friend GstFlowReturn newPreroll(GstAppSink *sink, gpointer data);
     friend class Core;
 #endif
-
+    
 private:
     Camera();
     virtual ~Camera();
-
+    
     static Camera* mThis;
-
+    
 #ifdef TARGET_OS_WINDOWS
     GstRegistry* mRegistry;
 #endif
-
+    
     char* mCamBuffer; // Camera BMP buffer (BGR)
     boost::mutex mMutex;
-
+    
     bool mStarted;
 #if !defined(TARGET_OS_ANDROID) && !defined(TARGET_OS_WINDOWS)
     NSCamera* mCamera;
@@ -59,11 +53,11 @@ private:
     short mWidth;
     short mHeight;
     unsigned int mBufferLen;
-
-#ifndef TARGET_OS_IOS
+    
+#if !defined(TARGET_OS_IOS) && !defined(TARGET_OS_X)
     void updateFrame(GstBuffer* jpeg);
 #endif
-
+    
 public:
     static Camera* getInstance() {
         if (!mThis)
@@ -76,20 +70,20 @@ public:
             mThis = NULL;
         }
     }
-
+    
     inline bool isStarted() const { return mStarted; }
-
+    
     inline short getWidth() const { return mWidth; }
     inline short getHeight() const { return mHeight; }
-
+    
     inline void lock() { mMutex.lock(); }
     inline const char* getBuffer() const { return mCamBuffer; }
     inline unsigned int getLength() const { return mBufferLen; }
     inline void unlock() { mMutex.unlock(); }
-
+    
     //////
     bool start(short width, short height);
-
+    
 #ifdef TARGET_OS_ANDROID
     void pause(bool lockScreen);
     // WARNING: Do not use this method (reserved)
@@ -99,11 +93,11 @@ private:
     void resume();
     // -> Pause/Resume operation reserved
 #endif
-
+    
 public:
     bool stop();
     void updateBuffer(const unsigned char* data);
-
+    
 };
 
 #endif // UNCHAINED_CAMERA_H_
