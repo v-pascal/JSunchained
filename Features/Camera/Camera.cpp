@@ -8,20 +8,13 @@
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
 
-#else
+#else // Apple
 #include "Tools.h"
 #include "Log.h"
 #include "Storage.h"
 
-#ifdef TARGET_OS_IOS
 #include <libGST/libGST.h>
 #include <libGST/defLibGST.h>
-
-#else // Mac
-#include <libGST/libGST.h>
-#include <libGST/defLibGST.h>
-
-#endif
 
 #endif
 #include <assert.h>
